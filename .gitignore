@@ -33,3 +33,8 @@
 
 # PlatformIO intermediates
 .pio/*
+
+# don't upload secrets to github
+include/secrets.h
+
+include/secrets.h

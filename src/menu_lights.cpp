@@ -36,7 +36,6 @@ void display_menu_lights() {
     lv_obj_t* lightsDimObj = lv_obj_create(grid);
     lv_obj_t* lightsDimLabel = lv_label_create(lightsDimObj);
     lv_label_set_text(lightsDimLabel, "Lights Dim");
-    lv_obj_add_event_cb(lightsDimObj, lightsOnCallback, LV_EVENT_CLICKED, NULL);
     lv_obj_add_event_cb(lightsDimObj, lightsDimCallback, LV_EVENT_CLICKED, NULL);
 
     lv_obj_set_grid_cell(lightsDimObj, LV_GRID_ALIGN_STRETCH, 0, 1,  //column
@@ -64,30 +63,32 @@ void lightsDimCallback(lv_event_t * e) {
     lv_obj_t * button = (lv_obj_t*)lv_event_get_target(e);
     lv_obj_t * label = (lv_obj_t*)lv_obj_get_child(button, 0);
     lv_label_set_text_fmt(label, "Lights Power 15%%");
+    Serial.print("Dimming lights on topic ");
+    Serial.print(BedroomDimmerTopic);
+    Serial.print(": ");
+    Serial.println("0.15");
+
     mqttClient.beginMessage(BedroomDimmerTopic);
     mqttClient.print("0.15");
     mqttClient.endMessage();
-    delay(1000); // TODO: use an async timeout to revert the labels back to their defaults
-    lv_label_set_text_fmt(label, "Dim Lights");
 }
 
 void lightsOnCallback(lv_event_t* e) {
     lv_obj_t * button = (lv_obj_t*)lv_event_get_target(e);
     lv_obj_t * label = (lv_obj_t*)lv_obj_get_child(button, 0);
     lv_label_set_text_fmt(label, "Lights Power 100%%");
+    Serial.println("Turning lights on");
     mqttClient.beginMessage(BedroomDimmerTopic);
     mqttClient.print("1.0");
     mqttClient.endMessage();
-    delay(1000); // TODO: use an async timeout to revert the labels back to their defaults
-    lv_label_set_text_fmt(label, "Lights On");
 }
+
 void lightsOffCallback(lv_event_t* e) {
     lv_obj_t * button = (lv_obj_t*)lv_event_get_target(e);
     lv_obj_t * label = (lv_obj_t*)lv_obj_get_child(button, 0);
     lv_label_set_text_fmt(label, "Lights Power 0%%");
+    Serial.println("Turning lights off");
     mqttClient.beginMessage(BedroomDimmerTopic);
     mqttClient.print("0.0");
     mqttClient.endMessage();
-    delay(1000); // TODO: use an async timeout to revert the labels back to their defaults
-    lv_label_set_text_fmt(label, "Lights Off");
 }

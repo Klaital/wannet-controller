@@ -26,13 +26,12 @@ Arduino_H7_Video          Display(800, 480, GigaDisplayShield);
 Arduino_GigaDisplayTouch  TouchDetector;
 GigaDisplayBacklight backlight;
 
-String ssid = WIFI_SSID;
-String wifiPass = WIFI_PASS;
+const char ssid[] = WIFI_SSID;
+const char wifiPass[] = WIFI_PASS;
 
 WiFiClient mqttWiFi;
 MqttClient mqttClient(mqttWiFi);
 String BedroomDimmerTopic = BEDROOM_DIMMER_TOPIC;
-
 
 void setup() {
   Display.begin();
@@ -41,17 +40,27 @@ void setup() {
   backlight.set(cfg.brightness);
   TouchDetector.onDetect(gigaTouchHandler);
 
-  while(WiFi.begin(ssid.c_str(), wifiPass.c_str()) != WL_CONNECTED) {
+  while(WiFi.begin(ssid, wifiPass) != WL_CONNECTED) {
     // failed to connect
     Serial.println("Connecting to wifi...");
     delay(5000);
   }
 
+  Serial.println("Success!");
+  Serial.println("Connecting to MQTT broker...");
+  if (!mqttClient.connect(MQTT_BROKER_HOST, MQTT_BROKER_PORT)) {
+    Serial.print("MQTT connection failed! Error = ");
+    Serial.println(mqttClient.connectError());
+    while(true)
+      // halt and catch fire
+      ;
+  }
+  Serial.println("Success!");
   display_menu_lights();
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  mqttClient.poll();
   lv_timer_handler();
   delay(10);
 }
@@ -104,7 +113,7 @@ void display_main_menu() {
 
 unsigned long lastTouch;
 unsigned long touchThreshold = 250; // milliseconds
-void gigaTouchHandler(uint8_t contacts, GDTpoint_t* points) {
+void gigaTouchHandler(const uint8_t contacts, GDTpoint_t* points) {
   if (millis() - lastTouch < touchThreshold) {
     // no-op until the cooldown has expired
     return;
@@ -113,13 +122,13 @@ void gigaTouchHandler(uint8_t contacts, GDTpoint_t* points) {
     // no-op if there's no touches
     return;
   }
-  Serial.print("Contacts: ");
-  Serial.println(contacts);
-
-  /* First touch point */
-  Serial.print(points[0].x);
-  Serial.print(" ");
-  Serial.println(points[0].y);
+  // Serial.print("Contacts: ");
+  // Serial.println(contacts);
+  //
+  // /* First touch point */
+  // Serial.print(points[0].x);
+  // Serial.print(" ");
+  // Serial.println(points[0].y);
 }
 
 
