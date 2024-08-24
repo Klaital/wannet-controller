@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <RotaryEncoder.h>
 
 #include <WiFi.h>
 #include "Arduino_H7_Video.h"
@@ -25,6 +26,10 @@ Config cfg = (Config){
 Arduino_H7_Video          Display(800, 480, GigaDisplayShield);
 Arduino_GigaDisplayTouch  TouchDetector;
 GigaDisplayBacklight backlight;
+extern RotaryEncoder Encoder;
+volatile bool encoderClicked = false;
+volatile bool encoderClocked = false;
+
 
 const char ssid[] = WIFI_SSID;
 const char wifiPass[] = WIFI_PASS;
@@ -33,82 +38,65 @@ WiFiClient mqttWiFi;
 MqttClient mqttClient(mqttWiFi);
 String BedroomDimmerTopic = BEDROOM_DIMMER_TOPIC;
 
+void HandleClockwiseTurn();
+void HandleClickInput();
+void HandleCounterClockwiseTurn();
+
 void setup() {
+  Serial.begin(9600);
+  while(!Serial);
+  Serial.println("Beginning initialization");
   Display.begin();
   TouchDetector.begin();
+
+  Serial.println("Initializing encoder input");
+  Encoder.register_btn_handler(&HandleClickInput);
+  Encoder.register_cw_handler(&HandleClockwiseTurn);
+  Encoder.register_ccw_handler(&HandleCounterClockwiseTurn);
+  Encoder.begin(
+    ROTARY_ENCODER_CLK_PIN,
+    ROTARY_ENCODER_DATA_PIN,
+    ROTARY_ENCODER_BTN_PIN);
+
+  Serial.println("Initializing backlight controls");
   backlight.begin();
   backlight.set(cfg.brightness);
   TouchDetector.onDetect(gigaTouchHandler);
 
-  while(WiFi.begin(ssid, wifiPass) != WL_CONNECTED) {
-    // failed to connect
-    Serial.println("Connecting to wifi...");
-    delay(5000);
-  }
-
-  Serial.println("Success!");
-  Serial.println("Connecting to MQTT broker...");
-  if (!mqttClient.connect(MQTT_BROKER_HOST, MQTT_BROKER_PORT)) {
-    Serial.print("MQTT connection failed! Error = ");
-    Serial.println(mqttClient.connectError());
-    while(true)
-      // halt and catch fire
-      ;
-  }
-  Serial.println("Success!");
+  // while(WiFi.begin(ssid, wifiPass) != WL_CONNECTED) {
+  //   // failed to connect
+  //   Serial.println("Connecting to wifi...");
+  //   delay(5000);
+  // }
+  //
+  // Serial.println("Success!");
+  // Serial.println("Connecting to MQTT broker...");
+  // if (!mqttClient.connect(MQTT_BROKER_HOST, MQTT_BROKER_PORT)) {
+  //   Serial.print("MQTT connection failed! Error = ");
+  //   Serial.println(mqttClient.connectError());
+  //   while(true)
+  //     // halt and catch fire
+  //     ;
+  // }
+  Serial.println("Ready!");
   display_menu_lights();
 }
 
 void loop() {
-  mqttClient.poll();
+  // if (encoderClicked) {
+  //   encoderClicked = false;
+  //   Serial.println("encoder clicked");
+  // }
+  // if (encoderClocked) {
+  //   encoderClocked = false;
+  //   Encoder.handle_rising_clk();
+  // }
+  // check for movement on the panel's dial
+  Encoder.poll();
+
+  // mqttClient.poll();
   lv_timer_handler();
   delay(10);
-}
-
-void display_main_menu() {
-    //Display & Grid Setup
-  lv_obj_t* screen = lv_obj_create(lv_scr_act());
-  lv_obj_set_size(screen, Display.width(), Display.height());
-
-  static lv_coord_t col_dsc[] = { 370, 370, LV_GRID_TEMPLATE_LAST };
-  static lv_coord_t row_dsc[] = { 215, 215, 215, 215, LV_GRID_TEMPLATE_LAST };
-
-  lv_obj_t* grid = lv_obj_create(lv_scr_act());
-  lv_obj_set_grid_dsc_array(grid, col_dsc, row_dsc);
-  lv_obj_set_size(grid, Display.width(), Display.height());
-
-
-  //top left
-  lv_obj_t* obj;
-  obj = lv_obj_create(grid);
-  lv_obj_t* img;
-  img = lv_img_create(obj);
-  LV_IMG_DECLARE(Abandonedfactory_small);
-  lv_img_set_src(img, &Abandonedfactory_small);
-  lv_obj_align(img, LV_ALIGN_CENTER, 0, 0);
-  lv_obj_set_size(img, Abandonedfactory_small.header.w, Abandonedfactory_small.header.h);
-  lv_obj_set_grid_cell(obj, LV_GRID_ALIGN_STRETCH, 0, 1,  //column
-                       LV_GRID_ALIGN_STRETCH, 0, 1);      //row
-
-  //bottom left
-  obj = lv_obj_create(grid);
-  lv_obj_t* label;
-  label = lv_label_create(obj);
-  lv_label_set_text(label, "Hello, world!");
-
-  lv_obj_set_grid_cell(obj, LV_GRID_ALIGN_STRETCH, 0, 1,  //column
-                       LV_GRID_ALIGN_STRETCH, 1, 1);      //row
-
-  //top right
-  obj = lv_obj_create(grid);
-  lv_obj_set_grid_cell(obj, LV_GRID_ALIGN_STRETCH, 1, 1,  //column
-                       LV_GRID_ALIGN_STRETCH, 0, 1);      //row
-
-
-  //bottom right
-  obj = lv_obj_create(grid);
-  lv_obj_set_grid_cell(obj, LV_GRID_ALIGN_STRETCH, 1, 1,  //column
-                       LV_GRID_ALIGN_STRETCH, 1, 1);      //row
 }
 
 unsigned long lastTouch;
@@ -131,4 +119,13 @@ void gigaTouchHandler(const uint8_t contacts, GDTpoint_t* points) {
   // Serial.println(points[0].y);
 }
 
+void HandleClockwiseTurn() {
+  Serial.println("Turned Clockwise");
+}
+void HandleCounterClockwiseTurn() {
+  Serial.println("Turned CounterClockwise");
+}
 
+void HandleClickInput() {
+  Serial.println("Button clicked");
+}
