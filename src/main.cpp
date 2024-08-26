@@ -1,59 +1,60 @@
 #include <Arduino.h>
-#include <RotaryEncoder.h>
-
 #include <WiFi.h>
+
 #include "Arduino_H7_Video.h"
 #include "lvgl.h"
 #include "Arduino_GigaDisplayTouch.h"
 #include "Arduino_GigaDisplay.h"
-#include "display.h"
-#include "menu_lights.h"
+
 #include "config.h"
 #include "secrets.h"
+#include "display.h"
+#include "RotaryEncoder.h"
+#include "ui.h"
 
-extern const lv_img_dsc_t Abandonedfactory_small;
+// extern const lv_img_dsc_t Abandonedfactory_small;
 
 void gigaTouchHandler(uint8_t contacts, GDTpoint_t* points);
-
 
 typedef struct {
   int brightness;
 } Config;
-Config cfg = (Config){
+
+auto cfg = (Config){
   100
 };
 
 Arduino_H7_Video          Display(800, 480, GigaDisplayShield);
 Arduino_GigaDisplayTouch  TouchDetector;
 GigaDisplayBacklight backlight;
-extern RotaryEncoder Encoder;
-volatile bool encoderClicked = false;
-volatile bool encoderClocked = false;
 
 
-const char ssid[] = WIFI_SSID;
-const char wifiPass[] = WIFI_PASS;
+constexpr char ssid[] = WIFI_SSID;
+constexpr char wifiPass[] = WIFI_PASS;
 
 WiFiClient mqttWiFi;
 MqttClient mqttClient(mqttWiFi);
 String BedroomDimmerTopic = BEDROOM_DIMMER_TOPIC;
 
-void HandleClockwiseTurn();
+Encoder LeftKnob(ROTARY_ENCODER_CLK_PIN, ROTARY_ENCODER_DATA_PIN, ROTARY_ENCODER_BTN_PIN);
+volatile bool leftknob_turned = false;
+void LeftKnobRotationCallback(long new_pos);
+void HandleLeftKnobRotation(long pos);
+volatile bool leftknob_clicked = false;
 void HandleClickInput();
-void HandleCounterClockwiseTurn();
 
 void setup() {
   Serial.begin(9600);
-  while(!Serial);
+  // while(!Serial);
   Serial.println("Beginning initialization");
   Display.begin();
   TouchDetector.begin();
 
   Serial.println("Initializing encoder input");
-  Encoder.register_btn_handler(&HandleClickInput);
-  Encoder.register_cw_handler(&HandleClockwiseTurn);
-  Encoder.register_ccw_handler(&HandleCounterClockwiseTurn);
-  Encoder.begin(
+  LeftKnob.register_btn_callback(&HandleClickInput);
+  LeftKnob.register_rotation_callback(LeftKnobRotationCallback);
+  LeftKnob.configure_bounds(0, 1);
+  LeftKnob.begin(
     ROTARY_ENCODER_CLK_PIN,
     ROTARY_ENCODER_DATA_PIN,
     ROTARY_ENCODER_BTN_PIN);
@@ -61,6 +62,7 @@ void setup() {
   Serial.println("Initializing backlight controls");
   backlight.begin();
   backlight.set(cfg.brightness);
+
   TouchDetector.onDetect(gigaTouchHandler);
 
   // while(WiFi.begin(ssid, wifiPass) != WL_CONNECTED) {
@@ -79,20 +81,23 @@ void setup() {
   //     ;
   // }
   Serial.println("Ready!");
-  display_menu_lights();
+
+  ui_init();
 }
 
 void loop() {
-  // if (encoderClicked) {
-  //   encoderClicked = false;
-  //   Serial.println("encoder clicked");
-  // }
-  // if (encoderClocked) {
-  //   encoderClocked = false;
-  //   Encoder.handle_rising_clk();
-  // }
   // check for movement on the panel's dial
-  Encoder.poll();
+  const long leftknob_pos = LeftKnob.read();
+  if (leftknob_clicked) {
+    leftknob_clicked = false;
+    Serial.println("encoder clicked");
+  }
+  if (leftknob_turned) {
+    leftknob_turned = false;
+    Serial.print("Left Knob turned to pos=");
+    Serial.println(leftknob_pos);
+    HandleLeftKnobRotation(leftknob_pos);
+  }
 
   // mqttClient.poll();
   lv_timer_handler();
@@ -119,13 +124,28 @@ void gigaTouchHandler(const uint8_t contacts, GDTpoint_t* points) {
   // Serial.println(points[0].y);
 }
 
-void HandleClockwiseTurn() {
-  Serial.println("Turned Clockwise");
+// int currentScreen = 0;
+// typedef void (*MenuRenderer)();
+constexpr int SCREEN_COUNT = 2;
+// MenuRenderer screens[SCREEN_COUNT] = {
+//   display_menu_tv,
+//   display_menu_lights
+// };
+//
+void LeftKnobRotationCallback(long new_pos) {
+  leftknob_turned = true;
 }
-void HandleCounterClockwiseTurn() {
-  Serial.println("Turned CounterClockwise");
+void HandleLeftKnobRotation(const long pos) {
+  if (pos < 0 || pos >= SCREEN_COUNT) {
+    Serial.print("Invalid position for LeftKnob. Pos=");
+    Serial.println(pos);
+  } else {
+    // screens[pos]();
+
+  }
 }
 
 void HandleClickInput() {
-  Serial.println("Button clicked");
+  leftknob_clicked = true;
 }
+

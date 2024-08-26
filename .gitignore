@@ -38,3 +38,5 @@
 include/secrets.h
 
 include/secrets.h
+
+lib/ArduinoHttp
