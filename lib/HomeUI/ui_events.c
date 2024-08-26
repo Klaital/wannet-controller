@@ -21,3 +21,15 @@ void dimmerChanged(lv_event_t * e)
 		}
 	}
 }
+
+void LightSwitchCallback(lv_event_t * e)
+{
+	// Your code here
+	lv_obj_t * target = lv_event_get_target(e);
+
+}
+
+void SetWakeupCallback(lv_event_t * e)
+{
+	// Your code here
+}

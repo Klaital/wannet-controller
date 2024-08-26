@@ -11,6 +11,8 @@ extern "C" {
 #endif
 
 void dimmerChanged(lv_event_t * e);
+void LightSwitchCallback(lv_event_t * e);
+void SetWakeupCallback(lv_event_t * e);
 
 #ifdef __cplusplus
 } /*extern "C"*/

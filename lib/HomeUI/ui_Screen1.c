@@ -99,5 +99,7 @@ void ui_Screen1_screen_init(void)
     lv_label_set_text(ui_SetWakeupBtnLabel, "Set");
 
     lv_obj_add_event_cb(ui_DimmerSlider, ui_event_DimmerSlider, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_LightsOnSwitch, ui_event_LightsOnSwitch, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_WakeupSetButton, ui_event_WakeupSetButton, LV_EVENT_ALL, NULL);
 
 }

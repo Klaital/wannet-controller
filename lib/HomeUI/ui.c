@@ -14,11 +14,13 @@ void ui_Screen1_screen_init(void);
 lv_obj_t * ui_Screen1;
 void ui_event_DimmerSlider(lv_event_t * e);
 lv_obj_t * ui_DimmerSlider;
+void ui_event_LightsOnSwitch(lv_event_t * e);
 lv_obj_t * ui_LightsOnSwitch;
 lv_obj_t * ui_LightsOnLabel;
 lv_obj_t * ui_LightsHeading;
 lv_obj_t * ui_WaekupTimeSelect;
 lv_obj_t * ui_WakeupSetLabel;
+void ui_event_WakeupSetButton(lv_event_t * e);
 lv_obj_t * ui_WakeupSetButton;
 lv_obj_t * ui_DimmerPct;
 lv_obj_t * ui_Label6;
@@ -42,6 +44,22 @@ void ui_event_DimmerSlider(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_RELEASED) {
         dimmerChanged(e);
+    }
+}
+void ui_event_LightsOnSwitch(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_CLICKED) {
+        LightSwitchCallback(e);
+    }
+}
+void ui_event_WakeupSetButton(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_CLICKED) {
+        SetWakeupCallback(e);
     }
 }
 
