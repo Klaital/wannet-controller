@@ -109,7 +109,7 @@ void loop() {
     tv_controller.FetchTvConfig(&tv_config);
     Serial.println("Got new playlist set:" );
     Serial.println(tv_config.playlist_options);
-    lv_roller_set_options(ui_PlaylistSelectRoller, tv_config.playlist_options.c_str(), LV_ROLLER_MODE_NORMAL);
+    lv_roller_set_options(ui_PlaylistSelectRoller, tv_config.playlist_options, LV_ROLLER_MODE_NORMAL);
     Serial.print("Selected Playlist: ");
     Serial.print(tv_config.current_playlist);
     Serial.print(" (");
