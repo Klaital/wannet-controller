@@ -10,6 +10,9 @@
 #include "secrets.h"
 #include "display.h"
 #include "RotaryEncoder.h"
+// #include "ui.h"
+#include <TvControlClient.h>
+
 #include "ui.h"
 
 // extern const lv_img_dsc_t Abandonedfactory_small;
@@ -35,6 +38,8 @@ constexpr char wifiPass[] = WIFI_PASS;
 WiFiClient mqttWiFi;
 MqttClient mqttClient(mqttWiFi);
 String BedroomDimmerTopic = BEDROOM_DIMMER_TOPIC;
+TvControlClient tv_controller(BEDROOM_TV_HOST, 8080, &mqttWiFi);
+TvConfig tv_config;
 
 Encoder LeftKnob(ROTARY_ENCODER_CLK_PIN, ROTARY_ENCODER_DATA_PIN, ROTARY_ENCODER_BTN_PIN);
 volatile bool leftknob_turned = false;
@@ -45,7 +50,7 @@ void HandleClickInput();
 
 void setup() {
   Serial.begin(9600);
-  // while(!Serial);
+  while(!Serial);
   Serial.println("Beginning initialization");
   Display.begin();
   TouchDetector.begin();
@@ -65,26 +70,26 @@ void setup() {
 
   TouchDetector.onDetect(gigaTouchHandler);
 
-  // while(WiFi.begin(ssid, wifiPass) != WL_CONNECTED) {
-  //   // failed to connect
-  //   Serial.println("Connecting to wifi...");
-  //   delay(5000);
-  // }
-  //
-  // Serial.println("Success!");
-  // Serial.println("Connecting to MQTT broker...");
-  // if (!mqttClient.connect(MQTT_BROKER_HOST, MQTT_BROKER_PORT)) {
-  //   Serial.print("MQTT connection failed! Error = ");
-  //   Serial.println(mqttClient.connectError());
-  //   while(true)
-  //     // halt and catch fire
-  //     ;
-  // }
+  while(WiFi.begin(ssid, wifiPass) != WL_CONNECTED) {
+    // failed to connect
+    Serial.println("Connecting to wifi...");
+    delay(5000);
+  }
+
+  Serial.println("Connecting to MQTT broker...");
+  if (!mqttClient.connect(MQTT_BROKER_HOST, MQTT_BROKER_PORT)) {
+    Serial.print("MQTT connection failed! Error = ");
+    Serial.println(mqttClient.connectError());
+    while(true)
+      // halt and catch fire
+      ;
+  }
   Serial.println("Ready!");
 
   ui_init();
 }
 
+bool updatedTvConfigRequested = true;
 void loop() {
   // check for movement on the panel's dial
   const long leftknob_pos = LeftKnob.read();
@@ -97,6 +102,20 @@ void loop() {
     Serial.print("Left Knob turned to pos=");
     Serial.println(leftknob_pos);
     HandleLeftKnobRotation(leftknob_pos);
+  }
+  if (updatedTvConfigRequested) {
+    updatedTvConfigRequested = false;
+    Serial.println("Fetching updated TV config");
+    tv_controller.FetchTvConfig(&tv_config);
+    Serial.println("Got new playlist set:" );
+    Serial.println(tv_config.playlist_options);
+    lv_roller_set_options(ui_PlaylistSelectRoller, tv_config.playlist_options.c_str(), LV_ROLLER_MODE_NORMAL);
+    Serial.print("Selected Playlist: ");
+    Serial.print(tv_config.current_playlist);
+    Serial.print(" (");
+    Serial.print(tv_config.index_of_playlist(tv_config.current_playlist));
+    Serial.println(")");
+    lv_roller_set_selected(ui_PlaylistSelectRoller, tv_config.index_of_playlist(tv_config.current_playlist), LV_ANIM_ON);
   }
 
   // mqttClient.poll();
@@ -136,13 +155,7 @@ void LeftKnobRotationCallback(long new_pos) {
   leftknob_turned = true;
 }
 void HandleLeftKnobRotation(const long pos) {
-  if (pos < 0 || pos >= SCREEN_COUNT) {
-    Serial.print("Invalid position for LeftKnob. Pos=");
-    Serial.println(pos);
-  } else {
-    // screens[pos]();
 
-  }
 }
 
 void HandleClickInput() {
