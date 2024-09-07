@@ -13,7 +13,6 @@
 class TvConfig {
 public:
     char playlist_options[256] = "";
-    // int playlist_count = 0;
     char current_playlist[64] = "";
     bool shuffle = false;
     bool loop = false;
@@ -77,20 +76,6 @@ public:
                 newlines++;
             }
         }
-
-        // const char* head = strstr(this->playlist_options, playlist);
-        // if (head == nullptr) {
-        //     Serial.println(playlist);
-        //     Serial.println(" not found!");
-        //     return 0;
-        // }
-        //
-        //
-        // for (size_t i = 0; &playlist[i] != head; i++) {
-        //     if (playlist[i] == '\n') {
-        //         newlines++;
-        //     }
-        // }
 
         return newlines+1;
     }

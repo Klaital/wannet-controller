@@ -29,7 +29,7 @@ int TvControlClient::FetchTvConfig(TvConfig *cfg) {
 
 int TvControlClient::ChangePlaylist(const char *playlist) {
     HTTP::Request req;
-    strcpy(req.method, "GET");
+    strcpy(req.method, "PUT");
     strcpy(req.path, "/cfg/playlist");
     req.headers.set("Content-Type", "application/json");
     strcpy(req.body, R"({"playlist":")");
@@ -46,5 +46,9 @@ int TvControlClient::ChangePlaylist(const char *playlist) {
     }
 
     // Success!
+    Serial.print("Set playlist: ");
+    Serial.print(resp.code);
+    Serial.print(" ");
+    Serial.println(resp.status);
     return 1;
 }
