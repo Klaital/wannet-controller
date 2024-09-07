@@ -50,7 +50,9 @@ void HandleClickInput();
 
 void setup() {
   Serial.begin(9600);
+#ifdef DEBUG
   while(!Serial);
+#endif
   Serial.println("Beginning initialization");
   Display.begin();
   TouchDetector.begin();
@@ -96,12 +98,12 @@ void loop() {
   const long leftknob_pos = LeftKnob.read();
   if (leftknob_clicked) {
     leftknob_clicked = false;
-    Serial.println("encoder clicked");
+    Serial.println("encoder clicked. Nothing is connected to this input yet.");
   }
   if (leftknob_turned) {
     leftknob_turned = false;
-    Serial.print("Left Knob turned to pos=");
-    Serial.println(leftknob_pos);
+    // Switch tabs when the left knob is turned.
+    lv_tabview_set_act(ui_TabView1, leftknob_pos, LV_ANIM_ON);
     HandleLeftKnobRotation(leftknob_pos);
   }
   if (updatedTvConfigRequested) {
