@@ -115,11 +115,11 @@ void ui_Screen1_screen_init(void)
 
 
     ui_PlaylistSelectRoller = lv_roller_create(ui_TabTV);
-    lv_roller_set_options(ui_PlaylistSelectRoller, "Father Ted\nThe Simpsons\nAre You Being Served?\nRandom All",
+    lv_roller_set_options(ui_PlaylistSelectRoller, "Father Ted\nFuturama	\nThe Simpsons\nAre You Being Served?\nRandom All",
                           LV_ROLLER_MODE_NORMAL);
     lv_roller_set_selected(ui_PlaylistSelectRoller, 1, LV_ANIM_OFF);
+    lv_obj_set_width(ui_PlaylistSelectRoller, 395);
     lv_obj_set_height(ui_PlaylistSelectRoller, 207);
-    lv_obj_set_width(ui_PlaylistSelectRoller, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_x(ui_PlaylistSelectRoller, -9);
     lv_obj_set_y(ui_PlaylistSelectRoller, 43);
     lv_obj_set_align(ui_PlaylistSelectRoller, LV_ALIGN_CENTER);
