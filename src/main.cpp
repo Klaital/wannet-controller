@@ -90,6 +90,7 @@ void setup() {
 }
 
 bool updatedTvConfigRequested = true;
+bool changePlaylistRequested = false;
 void loop() {
   // check for movement on the panel's dial
   const long leftknob_pos = LeftKnob.read();
@@ -107,15 +108,18 @@ void loop() {
     updatedTvConfigRequested = false;
     Serial.println("Fetching updated TV config");
     tv_controller.FetchTvConfig(&tv_config);
-    Serial.println("Got new playlist set:" );
-    Serial.println(tv_config.playlist_options);
     lv_roller_set_options(ui_PlaylistSelectRoller, tv_config.playlist_options, LV_ROLLER_MODE_NORMAL);
     Serial.print("Selected Playlist: ");
-    Serial.print(tv_config.current_playlist);
-    Serial.print(" (");
-    Serial.print(tv_config.index_of_playlist(tv_config.current_playlist));
-    Serial.println(")");
+    Serial.println(tv_config.current_playlist);
     lv_roller_set_selected(ui_PlaylistSelectRoller, tv_config.index_of_playlist(tv_config.current_playlist), LV_ANIM_ON);
+  }
+  if (changePlaylistRequested) {
+    changePlaylistRequested = false;
+    Serial.print("Changing playlist to ");
+    char playlist_name[64] = "";
+    lv_roller_get_selected_str(ui_PlaylistSelectRoller, playlist_name, 64);
+    Serial.println(playlist_name);
+    tv_controller.ChangePlaylist(playlist_name);
   }
 
   // mqttClient.poll();

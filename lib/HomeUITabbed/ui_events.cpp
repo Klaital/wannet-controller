@@ -87,9 +87,16 @@ void playlistUpCallback(lv_event_t * e)
 	lv_roller_set_selected(roller, v, LV_ANIM_ON);
 }
 
+extern bool changePlaylistRequested;
+unsigned long last_playlist_change_time = 0;
 void playlistSubmitCallback(lv_event_t * e)
 {
-	// TODO: make an HTTP call to the raspberry pi with the new playlist ID
+	// debounce the button press
+	const unsigned long now = millis();
+	if (now - last_playlist_change_time > 250) {
+		changePlaylistRequested = true;
+		last_playlist_change_time = now;
+	}
 }
 
 void playlistDownCallback(lv_event_t * e)
