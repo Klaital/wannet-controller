@@ -82,9 +82,10 @@ void setup() {
   if (!mqttClient.connect(MQTT_BROKER_HOST, MQTT_BROKER_PORT)) {
     Serial.print("MQTT connection failed! Error = ");
     Serial.println(mqttClient.connectError());
-    while(true)
-      // halt and catch fire
-      ;
+    // TODO: handle automatically reconnecting to MQTT after a network or server outage
+    // while(true)
+    //   // halt and catch fire
+    //   ;
   }
   Serial.println("Ready!");
 
@@ -102,18 +103,17 @@ void loop() {
   }
   if (leftknob_turned) {
     leftknob_turned = false;
-    // Switch tabs when the left knob is turned.
-    lv_tabview_set_act(ui_TabView1, leftknob_pos, LV_ANIM_ON);
     HandleLeftKnobRotation(leftknob_pos);
   }
   if (updatedTvConfigRequested) {
     updatedTvConfigRequested = false;
     Serial.println("Fetching updated TV config");
-    tv_controller.FetchTvConfig(&tv_config);
-    lv_roller_set_options(ui_PlaylistSelectRoller, tv_config.playlist_options, LV_ROLLER_MODE_NORMAL);
-    Serial.print("Selected Playlist: ");
-    Serial.println(tv_config.current_playlist);
-    lv_roller_set_selected(ui_PlaylistSelectRoller, tv_config.index_of_playlist(tv_config.current_playlist), LV_ANIM_ON);
+    if (tv_controller.FetchTvConfig(&tv_config)) {
+      lv_roller_set_options(ui_PlaylistSelectRoller, tv_config.playlist_options, LV_ROLLER_MODE_NORMAL);
+      Serial.print("Selected Playlist: ");
+      Serial.println(tv_config.current_playlist);
+      lv_roller_set_selected(ui_PlaylistSelectRoller, tv_config.index_of_playlist(tv_config.current_playlist), LV_ANIM_ON);
+    }
   }
   if (changePlaylistRequested) {
     changePlaylistRequested = false;
@@ -149,19 +149,12 @@ void gigaTouchHandler(const uint8_t contacts, GDTpoint_t* points) {
   // Serial.println(points[0].y);
 }
 
-// int currentScreen = 0;
-// typedef void (*MenuRenderer)();
-constexpr int SCREEN_COUNT = 2;
-// MenuRenderer screens[SCREEN_COUNT] = {
-//   display_menu_tv,
-//   display_menu_lights
-// };
-//
 void LeftKnobRotationCallback(long new_pos) {
   leftknob_turned = true;
 }
 void HandleLeftKnobRotation(const long pos) {
-
+  // Switch tabs when the left knob is turned.
+  lv_tabview_set_act(ui_TabView1, pos, LV_ANIM_ON);
 }
 
 void HandleClickInput() {
