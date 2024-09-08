@@ -40,3 +40,5 @@ include/secrets.h
 include/secrets.h
 
 lib/ArduinoHttp
+lib/HomeUITabbed/autosave/
+lib/HomeUITabbed/backup/
