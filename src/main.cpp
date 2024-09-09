@@ -15,6 +15,9 @@
 
 #include "ui.h"
 
+#include "mbed.h"
+#include <mbed_mktime.h>
+
 // extern const lv_img_dsc_t Abandonedfactory_small;
 
 void gigaTouchHandler(uint8_t contacts, GDTpoint_t* points);
@@ -30,6 +33,8 @@ auto cfg = (Config){
 Arduino_H7_Video          Display(800, 480, GigaDisplayShield);
 Arduino_GigaDisplayTouch  TouchDetector;
 GigaDisplayBacklight backlight;
+GigaDisplayRGB rgb; // controls the RGB LED on the Display
+void DisplayError(const char* msg);
 
 
 constexpr char ssid[] = WIFI_SSID;
@@ -48,14 +53,19 @@ void HandleLeftKnobRotation(long pos);
 volatile bool leftknob_clicked = false;
 void HandleClickInput();
 
+// Wakeup scheduling
+void CheckScheduledEvents();
+void rtc_from_ntp();
+void set_wakeup_time(int hour, int minute);
+
 void setup() {
   Serial.begin(9600);
-#ifdef DEBUG
-  while(!Serial);
-#endif
   Serial.println("Beginning initialization");
   Display.begin();
   TouchDetector.begin();
+  rgb.begin();
+  rgb.on(0, 0, 255);
+
 
   Serial.println("Initializing encoder input");
   LeftKnob.register_btn_callback(&HandleClickInput);
@@ -72,11 +82,27 @@ void setup() {
 
   TouchDetector.onDetect(gigaTouchHandler);
 
+#ifdef DEBUG
+  while(!Serial);
+#endif
+
+  int conn_attempts = 0;
   while(WiFi.begin(ssid, wifiPass) != WL_CONNECTED) {
     // failed to connect
     Serial.println("Connecting to wifi...");
+    conn_attempts += 1;
+    if (conn_attempts > 5) {
+      DisplayError("Failed to connect to wifi");
+    }
     delay(5000);
   }
+  Serial.print("IP: ");
+  Serial.println(WiFi.localIP());
+
+  // Start initializing the clock from network time
+  rtc_init();
+  rtc_from_ntp();
+  set_wakeup_time(16, 35);
 
   Serial.println("Connecting to MQTT broker...");
   if (!mqttClient.connect(MQTT_BROKER_HOST, MQTT_BROKER_PORT)) {
@@ -90,6 +116,7 @@ void setup() {
   Serial.println("Ready!");
 
   ui_init();
+  rgb.off();
 }
 
 bool updatedTvConfigRequested = true;
@@ -125,6 +152,8 @@ void loop() {
   }
 
   // mqttClient.poll();
+  CheckScheduledEvents();
+  rtc_from_ntp();
   lv_timer_handler();
   delay(10);
 }
@@ -161,3 +190,25 @@ void HandleClickInput() {
   leftknob_clicked = true;
 }
 
+void WakeupJob() {
+  Serial.println("Requesting lights to start wakeup routing");
+}
+
+// // Code to run at the same time each day
+// ScheduledJob scheduled_jobs[] = {
+//   WakeupJob
+// };
+//
+// // The time of day to run each job. Expressed as seconds since midnight.
+// unsigned long job_schedules[] = {
+//   19800 // 5:30 am
+// };
+//
+// // The time of the job's last run. Used to debounce the execution.
+// unsigned long job_last_run[] = {
+//   0
+// };
+//
+// void CheckScheduledJobs() {
+//
+// }
