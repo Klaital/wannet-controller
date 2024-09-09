@@ -27,9 +27,8 @@ void LightsOnCallback(lv_event_t * e)
 void DimmerChangedCallback(lv_event_t * e)
 {
 	const lv_event_code_t event_code = lv_event_get_code(e);
-	const lv_obj_t * target = lv_event_get_target(e);
 	char buf[8];
-	auto dimmerValue = lv_slider_get_value(target);
+	const auto dimmerValue = lv_slider_get_value(ui_LightsDimmerSlider);
 	lv_snprintf(buf, sizeof buf, "%ld%%", dimmerValue);
 	if(event_code == LV_EVENT_RELEASED) {
 		_ui_label_set_property(ui_DimmerValueLabel, _UI_LABEL_PROPERTY_TEXT, buf);
