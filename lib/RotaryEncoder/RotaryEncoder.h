@@ -14,7 +14,7 @@ class Encoder {
     pin_size_t clk, din, btn;
     PinStatus clk_last = LOW;
     long position = 0;
-    unsigned long cooldown = 100ul;
+    unsigned long cooldown = 10ul;
     unsigned long rotate_last = 0;
 
     PinStatus btn_pos = LOW;
