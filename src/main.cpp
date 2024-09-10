@@ -10,7 +10,6 @@
 #include "secrets.h"
 #include "display.h"
 #include "RotaryEncoder.h"
-// #include "ui.h"
 #include <TvControlClient.h>
 
 #include "ui.h"
@@ -33,6 +32,11 @@ auto cfg = (Config){
 Arduino_H7_Video          Display(800, 480, GigaDisplayShield);
 Arduino_GigaDisplayTouch  TouchDetector;
 GigaDisplayBacklight backlight;
+bool backlight_toggle_requested = false;
+pin_size_t BACKLIGHT_ON_PIN = A0;
+pin_size_t BACKLIGHT_OFF_PIN = A1;
+void DoBacklightChanged();
+void init_backlight_handler();
 GigaDisplayRGB rgb; // controls the RGB LED on the Display
 void DisplayError(const char* msg);
 
@@ -64,10 +68,10 @@ void setup() {
   Serial.begin(9600);
   Serial.println("Beginning initialization");
   Display.begin();
-  TouchDetector.begin();
   rgb.begin();
   rgb.on(0, 0, 255);
-
+  TouchDetector.begin();
+  // init_backlight_handler();
 
   Serial.println("Initializing encoder input");
   LeftKnob.register_btn_callback(&HandleClickInput);
@@ -137,6 +141,11 @@ void loop() {
   if (leftknob_turned) {
     leftknob_turned = false;
     HandleLeftKnobRotation(leftknob_pos);
+  }
+  // Check for toggling of the backlight switch
+  if (backlight_toggle_requested) {
+    backlight_toggle_requested = false;
+    DoBacklightChanged();
   }
   if (updatedTvConfigRequested) {
     updatedTvConfigRequested = false;
