@@ -13,6 +13,7 @@ extern "C" {
 void LightsOnCallback(lv_event_t * e);
 void DimmerChangedCallback(lv_event_t * e);
 void WakeupOverrideCallback(lv_event_t * e);
+void startWakeupNow(lv_event_t * e);
 void TvPowerToggleCallback(lv_event_t * e);
 void TvVolumeChangeCallback(lv_event_t * e);
 void playlistUpCallback(lv_event_t * e);

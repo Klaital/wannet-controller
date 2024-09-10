@@ -40,10 +40,10 @@ void DisplayError(const char* msg);
 constexpr char ssid[] = WIFI_SSID;
 constexpr char wifiPass[] = WIFI_PASS;
 
-WiFiClient mqttWiFi;
-MqttClient mqttClient(mqttWiFi);
+WiFiClient wifiClient;
+MqttClient mqttClient(wifiClient);
 String BedroomDimmerTopic = BEDROOM_DIMMER_TOPIC;
-TvControlClient tv_controller(BEDROOM_TV_HOST, 8080, &mqttWiFi);
+TvControlClient tv_controller(BEDROOM_TV_HOST, 8080, &wifiClient);
 TvConfig tv_config;
 
 Encoder LeftKnob(ROTARY_ENCODER_CLK_PIN, ROTARY_ENCODER_DATA_PIN, ROTARY_ENCODER_BTN_PIN);
@@ -57,6 +57,8 @@ void HandleClickInput();
 void CheckScheduledEvents();
 void rtc_from_ntp();
 void set_wakeup_time(int hour, int minute);
+HTTP::Request wakeup_request;
+HttpClient lights_client(LIGHTS_CONTROLLER_HOST, 80, &wifiClient);
 
 void setup() {
   Serial.begin(9600);
@@ -96,13 +98,17 @@ void setup() {
     }
     delay(5000);
   }
+
   Serial.print("IP: ");
   Serial.println(WiFi.localIP());
 
   // Start initializing the clock from network time
   rtc_init();
   rtc_from_ntp();
-  set_wakeup_time(16, 35);
+  set_wakeup_time(14, 15);
+  strcpy(wakeup_request.path, "/lights/wakeup");
+  strcpy(wakeup_request.method, "PUT");
+
 
   Serial.println("Connecting to MQTT broker...");
   if (!mqttClient.connect(MQTT_BROKER_HOST, MQTT_BROKER_PORT)) {

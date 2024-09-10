@@ -41,6 +41,12 @@ void DimmerChangedCallback(lv_event_t * e)
 	// TODO: submit dimmer update over MQTT
 }
 
+void doWakeup();
+void startWakeupNow(lv_event_t * e)
+{
+	doWakeup();
+}
+
 extern TvControlClient tv_controller;
 extern TvConfig tv_config;
 extern bool updatedTvConfigRequested;

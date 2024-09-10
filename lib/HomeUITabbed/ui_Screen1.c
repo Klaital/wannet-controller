@@ -91,14 +91,30 @@ void ui_Screen1_screen_init(void)
     lv_obj_add_flag(ui_WakeupOverrideButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     lv_obj_remove_flag(ui_WakeupOverrideButton, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
-    ui_lblWakeupSubmit = lv_label_create(ui_TabLights);
+    ui_lblWakeupSubmit = lv_label_create(ui_WakeupOverrideButton);
     lv_obj_set_width(ui_lblWakeupSubmit, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_lblWakeupSubmit, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_lblWakeupSubmit, -166);
-    lv_obj_set_y(ui_lblWakeupSubmit, 62);
+    lv_obj_set_x(ui_lblWakeupSubmit, 1);
+    lv_obj_set_y(ui_lblWakeupSubmit, 0);
     lv_obj_set_align(ui_lblWakeupSubmit, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblWakeupSubmit, "Override\nWakeup\n   Time");
     lv_obj_set_style_text_font(ui_lblWakeupSubmit, &lv_font_montserrat_16, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_wakeupNowBtn = lv_button_create(ui_TabLights);
+    lv_obj_set_width(ui_wakeupNowBtn, 100);
+    lv_obj_set_height(ui_wakeupNowBtn, 103);
+    lv_obj_set_x(ui_wakeupNowBtn, -49);
+    lv_obj_set_y(ui_wakeupNowBtn, 60);
+    lv_obj_set_align(ui_wakeupNowBtn, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_wakeupNowBtn, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_remove_flag(ui_wakeupNowBtn, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_WakeupNotLbl = lv_label_create(ui_wakeupNowBtn);
+    lv_obj_set_width(ui_WakeupNotLbl, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_WakeupNotLbl, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_WakeupNotLbl, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_WakeupNotLbl, "   Start\nWakeup\n   Now");
+    lv_obj_set_style_text_font(ui_WakeupNotLbl, &lv_font_montserrat_16, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_TabTV = lv_tabview_add_tab(ui_TabView1, "TV");
 
@@ -201,13 +217,35 @@ void ui_Screen1_screen_init(void)
     ui_lblClock = lv_label_create(ui_TabClock);
     lv_obj_set_width(ui_lblClock, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_lblClock, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_lblClock, -3);
+    lv_obj_set_y(ui_lblClock, -120);
     lv_obj_set_align(ui_lblClock, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblClock, "HH:mm");
     lv_obj_set_style_text_font(ui_lblClock, &lv_font_montserrat_48, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    ui_txtErrors = lv_textarea_create(ui_TabClock);
+    lv_obj_set_width(ui_txtErrors, 690);
+    lv_obj_set_height(ui_txtErrors, 76);
+    lv_obj_set_x(ui_txtErrors, -1);
+    lv_obj_set_y(ui_txtErrors, 146);
+    lv_obj_set_align(ui_txtErrors, LV_ALIGN_CENTER);
+    lv_textarea_set_placeholder_text(ui_txtErrors, "Placeholder...");
+    lv_obj_add_flag(ui_txtErrors, LV_OBJ_FLAG_HIDDEN);     /// Flags
+    lv_obj_remove_flag(ui_txtErrors, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE |
+                       LV_OBJ_FLAG_GESTURE_BUBBLE | LV_OBJ_FLAG_SNAPPABLE);     /// Flags
+
+
+
+    ui_lblwakeupcountdown = lv_label_create(ui_TabClock);
+    lv_obj_set_width(ui_lblwakeupcountdown, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_lblwakeupcountdown, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_lblwakeupcountdown, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_lblwakeupcountdown, "531 seconds until wakeup");
+
     lv_obj_add_event_cb(ui_LightsOnSwitch, ui_event_LightsOnSwitch, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_LightsDimmerSlider, ui_event_LightsDimmerSlider, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_WakeupOverrideButton, ui_event_WakeupOverrideButton, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_wakeupNowBtn, ui_event_wakeupNowBtn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_TvPowerSwitch, ui_event_TvPowerSwitch, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_TvVolumeSlider, ui_event_TvVolumeSlider, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_PlaylistUp, ui_event_PlaylistUp, LV_EVENT_ALL, NULL);

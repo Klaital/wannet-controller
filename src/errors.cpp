@@ -8,7 +8,7 @@
 extern GigaDisplayRGB rgb;
 void DisplayError(const char* msg) {
     // Blink the LED red and print the message
-    Serial.println("ERROR: ");
+    Serial.print("ERROR: ");
     Serial.println(msg);
     rgb.on(255, 0, 0);
     delay(100);

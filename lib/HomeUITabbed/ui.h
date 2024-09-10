@@ -31,6 +31,9 @@ extern lv_obj_t * ui_DimmerValueLabel;
 void ui_event_WakeupOverrideButton(lv_event_t * e);
 extern lv_obj_t * ui_WakeupOverrideButton;
 extern lv_obj_t * ui_lblWakeupSubmit;
+void ui_event_wakeupNowBtn(lv_event_t * e);
+extern lv_obj_t * ui_wakeupNowBtn;
+extern lv_obj_t * ui_WakeupNotLbl;
 extern lv_obj_t * ui_TabTV;
 extern lv_obj_t * ui_TVControlHeading;
 void ui_event_TvPowerSwitch(lv_event_t * e);
@@ -49,6 +52,8 @@ extern lv_obj_t * ui_lblPlaylistDown;
 extern lv_obj_t * ui_lblSelectPlaylist;
 extern lv_obj_t * ui_TabClock;
 extern lv_obj_t * ui_lblClock;
+extern lv_obj_t * ui_txtErrors;
+extern lv_obj_t * ui_lblwakeupcountdown;
 extern lv_obj_t * ui____initial_actions0;
 
 

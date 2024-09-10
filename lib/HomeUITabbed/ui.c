@@ -25,6 +25,9 @@ lv_obj_t * ui_DimmerValueLabel;
 void ui_event_WakeupOverrideButton(lv_event_t * e);
 lv_obj_t * ui_WakeupOverrideButton;
 lv_obj_t * ui_lblWakeupSubmit;
+void ui_event_wakeupNowBtn(lv_event_t * e);
+lv_obj_t * ui_wakeupNowBtn;
+lv_obj_t * ui_WakeupNotLbl;
 lv_obj_t * ui_TabTV;
 lv_obj_t * ui_TVControlHeading;
 void ui_event_TvPowerSwitch(lv_event_t * e);
@@ -43,6 +46,8 @@ lv_obj_t * ui_lblPlaylistDown;
 lv_obj_t * ui_lblSelectPlaylist;
 lv_obj_t * ui_TabClock;
 lv_obj_t * ui_lblClock;
+lv_obj_t * ui_txtErrors;
+lv_obj_t * ui_lblwakeupcountdown;
 lv_obj_t * ui____initial_actions0;
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
@@ -75,6 +80,14 @@ void ui_event_WakeupOverrideButton(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_CLICKED) {
         WakeupOverrideCallback(e);
+    }
+}
+void ui_event_wakeupNowBtn(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_CLICKED) {
+        startWakeupNow(e);
     }
 }
 void ui_event_TvPowerSwitch(lv_event_t * e)
