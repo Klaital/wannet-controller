@@ -1,82 +1,16 @@
 //
-// Created by Kit on 9/8/2024.
+// Created by Kit on 9/13/2024.
 //
-
-#include <HttpClient.h>
-
-#include "mbed.h"
-
-#include <mbed_mktime.h>
-#include <ui.h>
 #include <WiFi.h>
-#include <widgets/label/lv_label.h>
+#include "mbed.h"
+#include <mbed_mktime.h>
 
-void DisplayError(const char* msg);
-
-unsigned long wakeup_schedule = (14 * 3600) + (30 * 60) ; // 11:30am
-int last_wakeup_day = 0;
-
-void set_wakeup_time(const int hour, const int minute) {
-    last_wakeup_day = 0;
-    wakeup_schedule = (static_cast<unsigned long>(hour) * 3600) + (static_cast<unsigned long>(minute) * 60);
-}
-
-unsigned long day_seconds(const tm &t) {
-    return t.tm_sec + (t.tm_min * 60) + (t.tm_hour * 3600);
-}
-
-
-extern HTTP::Request wakeup_request;
-extern HttpClient lights_client;
-void doWakeup() {
-    Serial.println("Good morning!");
-    HTTP::Response resp;
-    lights_client.exec(wakeup_request, resp);
-    if (resp.code != 204) {
-        Serial.print("Error starting wakeup: ");
-        Serial.print(resp.code);
-        Serial.print(" ");
-        Serial.println(resp.status);
-        DisplayError("Failed to start wakeup");
-    }
-}
-void CheckScheduledEvents() {
-    // Get the current time from the RTC module
-    tm t;
-    _rtc_localtime(time(nullptr), &t, RTC_4_YEAR_LEAP_YEAR_SUPPORT);
-
-    // Update the clock display
-    lv_label_set_text_fmt(ui_lblClock, "%02d:%02d", t.tm_hour, t.tm_min);
-
-    if (t.tm_yday == last_wakeup_day) {
-        // already run today
-        return;
-    }
-    // Serial.print((wakeup_schedule - day_seconds(t))/60);
-    // Serial.println(" minutes until wakeup");
-    lv_label_set_text_fmt(
-        ui_lblwakeupcountdown,
-        "Wakeup at %lu\nNow=%lu\n%lu minutes until wakeup",
-        wakeup_schedule,
-        day_seconds(t),
-        (wakeup_schedule - day_seconds(t))/60
-    );
-    if (day_seconds(t) > wakeup_schedule) {
-        last_wakeup_day = t.tm_yday;
-        doWakeup();
-    }
-}
-
-// Fetch time from the network using NTP, and adjust it into a unix timestamp.
-int timezone = -7;
+extern int TimezoneOffset;
 unsigned int localUdpPort = 2390;
 constexpr auto timeServer{ "pool.ntp.org" };
 const int NTP_PACKET_SIZE = 48;  // NTP timestamp is in the first 48 bytes of the message
 byte packetBuffer[NTP_PACKET_SIZE];  // buffer to hold incoming and outgoing packets
-// A UDP instance to let us send and receive packets over UDP
 WiFiUDP Udp;
-constexpr unsigned long printInterval{ 1000 };
-unsigned long printNow{};
 
 void sendNTPpacket(const char* address);
 unsigned long parseNtpPacket();
@@ -86,6 +20,8 @@ unsigned long get_ntp_time() {
     delay(1000);
     return parseNtpPacket();
 }
+
+
 
 unsigned long wifi_last_update = 0;
 // Get the current time from network, use that to initialize the RTC clock
@@ -135,7 +71,7 @@ unsigned long parseNtpPacket() {
     const unsigned long secsSince1900 = highWord << 16 | lowWord;
     constexpr unsigned long seventyYears = 2208988800UL;
     const unsigned long epoch = secsSince1900 - seventyYears;
-    const unsigned long tz_epoch = epoch + (3600 * timezone); //multiply the timezone with 3600 (1 hour)
+    const unsigned long tz_epoch = epoch + (3600 * TimezoneOffset); //multiply the timezone with 3600 (1 hour)
 
 #if defined(VERBOSE)
     Serial.print("Seconds since Jan 1 1900 = ");

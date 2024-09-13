@@ -69,8 +69,8 @@ public:
     // Given an active playlist name, return the 1-indexed ID to set in the UI roller
     size_t index_of_playlist(const char* playlist) const {
         size_t newlines = 0;
-        String tmp = this->playlist_options;
-        auto head = tmp.indexOf(playlist);
+        const String tmp = this->playlist_options;
+        const auto head = static_cast<size_t>(tmp.indexOf(playlist));
         for (size_t i =0; i < head; i++) {
             if (this->playlist_options[i] == '\n') {
                 newlines++;

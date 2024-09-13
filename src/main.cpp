@@ -1,229 +1,200 @@
 #include <Arduino.h>
+#include <Arduino_GigaDisplayTouch.h>
+#include <Arduino_H7_Video.h>
+#include <Arduino_GigaDisplay.h>
 #include <WiFi.h>
 
-#include "Arduino_H7_Video.h"
-#include "lvgl.h"
-#include "Arduino_GigaDisplayTouch.h"
-#include "Arduino_GigaDisplay.h"
-
-#include "config.h"
-#include "secrets.h"
-#include "display.h"
-#include "RotaryEncoder.h"
+#include <config.h>
+#include <secrets.h>
+#include <ui.h>
+#include <AlarmClock.h>
+#include <Encoder.h>
+#include <HttpClient.h>
+#include <mbed_mktime.h>
+#include <MqttClient.h>
+#include <Request.h>
+#include <Response.h>
+#include <TvConfig.h>
 #include <TvControlClient.h>
 
-#include "ui.h"
-
-#include "mbed.h"
-#include <mbed_mktime.h>
-
-// extern const lv_img_dsc_t Abandonedfactory_small;
-
-void gigaTouchHandler(uint8_t contacts, GDTpoint_t* points);
-
-typedef struct {
-  int brightness;
-} Config;
-
-auto cfg = (Config){
-  100
-};
-
-Arduino_H7_Video          Display(800, 480, GigaDisplayShield);
 Arduino_GigaDisplayTouch  TouchDetector;
-GigaDisplayBacklight backlight;
-bool backlight_toggle_requested = false;
-pin_size_t BACKLIGHT_ON_PIN = A0;
-pin_size_t BACKLIGHT_OFF_PIN = A1;
-void DoBacklightChanged();
-void init_backlight_handler();
-GigaDisplayRGB rgb; // controls the RGB LED on the Display
-void DisplayError(const char* msg);
+Arduino_H7_Video Display(800, 480, GigaDisplayShield);
 
+// TODO: Configs to persist between power cycles
+int BacklightBrightness = 100;
+int TimezoneOffset = -7;
+int WakeupTime = (6 * 3600) + (30 * 60); // 6:30am
 
-constexpr char ssid[] = WIFI_SSID;
-constexpr char wifiPass[] = WIFI_PASS;
+// Backlight switch
+GigaDisplayBacklight Backlight;
+volatile bool backlight_switch_changed = true;
+void HandleBacklightSwitch();
+void BacklightSwitchISR();
 
-WiFiClient wifiClient;
-MqttClient mqttClient(wifiClient);
-String BedroomDimmerTopic = BEDROOM_DIMMER_TOPIC;
-TvControlClient tv_controller(BEDROOM_TV_HOST, 8080, &wifiClient);
-TvConfig tv_config;
-
+// Rotary Encoder dial
 Encoder LeftKnob(ROTARY_ENCODER_CLK_PIN, ROTARY_ENCODER_DATA_PIN, ROTARY_ENCODER_BTN_PIN);
 volatile bool leftknob_turned = false;
+volatile bool leftknob_clicked = false;
 void LeftKnobRotationCallback(long new_pos);
 void HandleLeftKnobRotation(long pos);
-volatile bool leftknob_clicked = false;
 void HandleClickInput();
 
-// Wakeup scheduling
-void CheckScheduledEvents();
-void rtc_from_ntp();
-void set_wakeup_time(int hour, int minute);
+// WiFi
+int ConnStatus;
+WiFiClient net;
+
+// Alarm Clock
+Wan::AlarmClock alarms(TimezoneOffset);
 HTTP::Request wakeup_request;
-HttpClient lights_client(LIGHTS_CONTROLLER_HOST, 80, &wifiClient);
+volatile bool wakeup_requested = false;
+void DoWakeup(const tm& now);
+void UpdateClock(const tm& now);
+
+// Lights Controller
+HttpClient lights_client(LIGHTS_CONTROLLER_HOST, 80, &net);
+MqttClient mqttClient(net);
+volatile bool change_lights_requested = false;
+void SetLightsBrightness();
+
+// TV Remote Control
+TvControlClient tv_controller(BEDROOM_TV_HOST, 8080, &net);
+TvConfig tv_config;
+volatile bool update_tv_config_requested = true;
+volatile bool change_playlist_requested = false;
+
 
 void setup() {
-  Serial.begin(9600);
-  Serial.println("Beginning initialization");
-  Display.begin();
-  rgb.begin();
-  rgb.on(0, 0, 255);
-  TouchDetector.begin();
-  // init_backlight_handler();
+    Serial.begin(9600);
+    Display.begin();
+    TouchDetector.begin();
+    Backlight.off();
 
-  Serial.println("Initializing encoder input");
-  LeftKnob.register_btn_callback(&HandleClickInput);
-  LeftKnob.register_rotation_callback(LeftKnobRotationCallback);
-  LeftKnob.configure_bounds(0, 1);
-  LeftKnob.begin(
-    ROTARY_ENCODER_CLK_PIN,
-    ROTARY_ENCODER_DATA_PIN,
-    ROTARY_ENCODER_BTN_PIN);
+    // Initialize the backlight switch
+    pinMode(BACKLIGHT_SWITCH_ON_PIN, INPUT_PULLDOWN);
+    attachInterrupt(digitalPinToInterrupt(BACKLIGHT_SWITCH_ON_PIN), BacklightSwitchISR, CHANGE);
 
-  Serial.println("Initializing backlight controls");
-  backlight.begin();
-  backlight.set(cfg.brightness);
+    // Initialize the rotary encoder
+    LeftKnob.register_btn_callback(HandleClickInput);
+    LeftKnob.register_rotation_callback(LeftKnobRotationCallback);
+    LeftKnob.configure_bounds(0, 2);
+    LeftKnob.begin(
+      ROTARY_ENCODER_CLK_PIN,
+      ROTARY_ENCODER_DATA_PIN,
+      ROTARY_ENCODER_BTN_PIN);
 
-  TouchDetector.onDetect(gigaTouchHandler);
-
-#ifdef DEBUG
-  while(!Serial);
-#endif
-
-  int conn_attempts = 0;
-  while(WiFi.begin(ssid, wifiPass) != WL_CONNECTED) {
-    // failed to connect
-    Serial.println("Connecting to wifi...");
-    conn_attempts += 1;
-    if (conn_attempts > 5) {
-      DisplayError("Failed to connect to wifi");
+    // Connect to wifi
+    ConnStatus = WiFi.begin(WIFI_SSID, WIFI_PASS);
+    while(ConnStatus != WL_CONNECTED) {
+        delay(5000);
+        Serial.println("Failed to connect. Retrying...");
+        ConnStatus = WiFi.begin(WIFI_SSID, WIFI_PASS);
     }
-    delay(5000);
-  }
+    Serial.print("IP: ");
+    Serial.println(WiFi.localIP());
 
-  Serial.print("IP: ");
-  Serial.println(WiFi.localIP());
-
-  // Start initializing the clock from network time
-  rtc_init();
-  rtc_from_ntp();
-  set_wakeup_time(14, 15);
-  strcpy(wakeup_request.path, "/lights/wakeup");
-  strcpy(wakeup_request.method, "PUT");
+    // Set up the clock.
+    rtc_init();
+    // Use NTP from the wifi module as the clock time.
+    alarms.set_alarm(WakeupTime, DoWakeup);
+    alarms.add_tick_handler(UpdateClock);
+    strcpy(wakeup_request.path, "/lights/wakeup");
+    strcpy(wakeup_request.method, "PUT");
 
 
-  Serial.println("Connecting to MQTT broker...");
-  if (!mqttClient.connect(MQTT_BROKER_HOST, MQTT_BROKER_PORT)) {
-    Serial.print("MQTT connection failed! Error = ");
-    Serial.println(mqttClient.connectError());
-    // TODO: handle automatically reconnecting to MQTT after a network or server outage
-    // while(true)
-    //   // halt and catch fire
-    //   ;
-  }
-  Serial.println("Ready!");
-
-  ui_init();
-  rgb.off();
+    // Start up the UI
+    ui_init();
+    Backlight.begin();
+    backlight_switch_changed = true; // force evaluation of the switch position on the first loop
 }
 
-bool updatedTvConfigRequested = true;
-bool changePlaylistRequested = false;
 void loop() {
-  // check for movement on the panel's dial
-  const long leftknob_pos = LeftKnob.read();
-  if (leftknob_clicked) {
-    leftknob_clicked = false;
-    Serial.println("encoder clicked. Nothing is connected to this input yet.");
-  }
-  if (leftknob_turned) {
-    leftknob_turned = false;
-    HandleLeftKnobRotation(leftknob_pos);
-  }
-  // Check for toggling of the backlight switch
-  if (backlight_toggle_requested) {
-    backlight_toggle_requested = false;
-    DoBacklightChanged();
-  }
-  if (updatedTvConfigRequested) {
-    updatedTvConfigRequested = false;
-    Serial.println("Fetching updated TV config");
-    if (tv_controller.FetchTvConfig(&tv_config)) {
-      lv_roller_set_options(ui_PlaylistSelectRoller, tv_config.playlist_options, LV_ROLLER_MODE_NORMAL);
-      Serial.print("Selected Playlist: ");
-      Serial.println(tv_config.current_playlist);
-      lv_roller_set_selected(ui_PlaylistSelectRoller, tv_config.index_of_playlist(tv_config.current_playlist), LV_ANIM_ON);
+    // Poll devices
+    const long leftknob_pos = LeftKnob.read();
+
+    // Handle ISR requests
+    if (backlight_switch_changed) {
+        HandleBacklightSwitch();
     }
-  }
-  if (changePlaylistRequested) {
-    changePlaylistRequested = false;
-    Serial.print("Changing playlist to ");
-    char playlist_name[64] = "";
-    lv_roller_get_selected_str(ui_PlaylistSelectRoller, playlist_name, 64);
-    Serial.println(playlist_name);
-    tv_controller.ChangePlaylist(playlist_name);
-  }
+    if (leftknob_clicked) {
+        leftknob_clicked = false;
+        Serial.println("encoder clicked. Nothing is connected to this input yet.");
+    }
+    if (leftknob_turned) {
+        leftknob_turned = false;
+        HandleLeftKnobRotation(leftknob_pos);
+    }
+    if (wakeup_requested) {
+        wakeup_requested = false;
+        tm now;
+        _rtc_localtime(time(nullptr), &now, RTC_4_YEAR_LEAP_YEAR_SUPPORT);
+        DoWakeup(now);
+    }
+    if (update_tv_config_requested) {
+        update_tv_config_requested = false;
+        Serial.println("Fetching updated TV config...");
+        if (tv_controller.FetchTvConfig(&tv_config)) {
+            lv_roller_set_options(ui_PlaylstSelection, tv_config.playlist_options, LV_ANIM_ON);
+            Serial.print("Selected playlist: ");
+            Serial.println(tv_config.current_playlist);
+        }
+    }
+    if (change_playlist_requested) {
+        change_playlist_requested = false;
+        Serial.print("Changing playlist to ");
+        char playlist_name[64] = "";
+        lv_roller_get_selected_str(ui_PlaylstSelection, playlist_name, 64);
+        Serial.println(playlist_name);
+        tv_controller.ChangePlaylist(playlist_name);
+    }
+    if (change_lights_requested) {
+        change_lights_requested = false;
+        Serial.println("Submitting updated light power...");
+        SetLightsBrightness();
+    }
 
-  // mqttClient.poll();
-  CheckScheduledEvents();
-  rtc_from_ntp();
-  lv_timer_handler();
-  delay(10);
-}
+    alarms.tick();
+    lv_timer_handler();
+    delay(10);
 
-unsigned long lastTouch;
-unsigned long touchThreshold = 250; // milliseconds
-void gigaTouchHandler(const uint8_t contacts, GDTpoint_t* points) {
-  if (millis() - lastTouch < touchThreshold) {
-    // no-op until the cooldown has expired
-    return;
-  }
-  if (contacts <= 0) {
-    // no-op if there's no touches
-    return;
-  }
-  // Serial.print("Contacts: ");
-  // Serial.println(contacts);
-  //
-  // /* First touch point */
-  // Serial.print(points[0].x);
-  // Serial.print(" ");
-  // Serial.println(points[0].y);
+    // call poll() regularly to allow the library to send MQTT keep alive which
+    // avoids being disconnected by the broker
+    mqttClient.poll();
 }
 
 void LeftKnobRotationCallback(long new_pos) {
-  leftknob_turned = true;
+    leftknob_turned = true;
 }
 void HandleLeftKnobRotation(const long pos) {
-  // Switch tabs when the left knob is turned.
-  lv_tabview_set_act(ui_TabView1, pos, LV_ANIM_ON);
+    // Switch tabs when the left knob is turned.
+    lv_tabview_set_act(ui_TabView1, pos, LV_ANIM_ON);
 }
-
 void HandleClickInput() {
-  leftknob_clicked = true;
+    leftknob_clicked = true;
+}
+void DoWakeup(const tm& now) {
+    Serial.println("Good morning!");
+    // send HTTP request to turn on the lights
+    HTTP::Response resp;
+    lights_client.exec(wakeup_request, resp);
+    if (resp.code != 204) {
+        Serial.print("Error starting wakeup: ");
+        Serial.print(resp.code);
+        Serial.print(" ");
+        Serial.println(resp.status);
+    }
 }
 
-void WakeupJob() {
-  Serial.println("Requesting lights to start wakeup routing");
+void UpdateClock(const tm& now) {
+    // TODO: add date to clock
+    lv_label_set_text_fmt(ui_Clock, "%02d-%02d\n%02d:%02d:%02d", now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec);
 }
+void SetLightsBrightness() {
+    Serial.println("Updating lights");
+    const auto pct = lv_slider_get_value(ui_LightsDimmer);
+    const float pwr = static_cast<float>(pct) / 100.0f;
 
-// // Code to run at the same time each day
-// ScheduledJob scheduled_jobs[] = {
-//   WakeupJob
-// };
-//
-// // The time of day to run each job. Expressed as seconds since midnight.
-// unsigned long job_schedules[] = {
-//   19800 // 5:30 am
-// };
-//
-// // The time of the job's last run. Used to debounce the execution.
-// unsigned long job_last_run[] = {
-//   0
-// };
-//
-// void CheckScheduledJobs() {
-//
-// }
+    // send brightness update via mqtt
+    mqttClient.beginMessage(BEDROOM_DIMMER_TOPIC);
+    mqttClient.print(pwr);
+    mqttClient.endMessage();
+}

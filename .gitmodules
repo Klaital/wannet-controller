@@ -1,0 +1,6 @@
+[submodule "lib/barebones-http"]
+	path = lib/barebones-http
+	url = git@github.com:Klaital/barebones-http.git
+[submodule "lib/c-keyval"]
+	path = lib/c-keyval
+	url = git@github.com:Klaital/c-keyval

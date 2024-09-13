@@ -2,7 +2,7 @@
 // Created by Kit on 8/22/2024.
 //
 
-#include "RotaryEncoder.h"
+#include "Encoder.h"
 
 
 void Encoder::begin(const pin_size_t clk, const pin_size_t data, const pin_size_t sw) {
