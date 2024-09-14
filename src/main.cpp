@@ -49,6 +49,7 @@ HTTP::Request wakeup_request;
 volatile bool wakeup_requested = false;
 void DoWakeup(const tm& now);
 void UpdateClock(const tm& now);
+void rtc_from_ntp(); // updates the onboard RTC from an NTC server. Will only query NTP once per day.
 
 // Lights Controller
 HttpClient lights_client(LIGHTS_CONTROLLER_HOST, 80, &net);
@@ -86,7 +87,8 @@ void setup() {
     ConnStatus = WiFi.begin(WIFI_SSID, WIFI_PASS);
     while(ConnStatus != WL_CONNECTED) {
         delay(5000);
-        Serial.println("Failed to connect. Retrying...");
+        Serial.print("Failed to connect: ");
+        Serial.println(ConnStatus);
         ConnStatus = WiFi.begin(WIFI_SSID, WIFI_PASS);
     }
     Serial.print("IP: ");
@@ -95,6 +97,8 @@ void setup() {
     // Set up the clock.
     rtc_init();
     // Use NTP from the wifi module as the clock time.
+    rtc_from_ntp();
+
     alarms.set_alarm(WakeupTime, DoWakeup);
     alarms.add_tick_handler(UpdateClock);
     strcpy(wakeup_request.path, "/lights/wakeup");
@@ -152,6 +156,7 @@ void loop() {
         SetLightsBrightness();
     }
 
+    rtc_from_ntp(); // update the RTC clock from an NTP server once per day
     alarms.tick();
     lv_timer_handler();
     delay(10);
