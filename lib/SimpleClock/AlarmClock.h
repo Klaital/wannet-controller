@@ -5,6 +5,8 @@
 #ifndef ALARMCLOCK_H
 #define ALARMCLOCK_H
 
+#include <core/lv_obj.h>
+
 #include "Alarm.h"
 
 #ifndef ALARM_MAX_COUNT
@@ -25,12 +27,21 @@ public:
      AlarmHandler tick_handlers[TICK_HANDLER_MAX_COUNT];
      size_t ticker_count = 0;
 
+     // GUI widgets to update on tick
+     lv_obj_t *clock_widget = nullptr;
+     lv_obj_t *alarm_countdown_widget = nullptr;
+
      AlarmClock(): alarms{}, tick_handlers{} {}
      explicit AlarmClock(const int tz_offset): tz_offset(tz_offset), alarms{}, tick_handlers{} {}
 
      // Configure an alarm.
-     void set_alarm(unsigned long day_seconds, AlarmHandler f);
+     void set_alarm(const char* name, unsigned long day_seconds, AlarmHandler f);
      void add_tick_handler(AlarmHandler h);
+
+     // Add UI widgets to be updated
+     void configure_lvgl_digital_clock(lv_obj_t *clock);
+     void configure_lvgl_countdowns(lv_obj_t *lbl);
+
      // check if any alarms need to fire now
      void tick();
 };

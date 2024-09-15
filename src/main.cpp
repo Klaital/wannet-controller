@@ -24,6 +24,7 @@ Arduino_H7_Video Display(800, 480, GigaDisplayShield);
 int BacklightBrightness = 100;
 int TimezoneOffset = -7;
 int WakeupTime = (6 * 3600) + (30 * 60); // 6:30am
+int LightsOffTime = (9 * 3600); // 9am
 
 // Backlight switch
 GigaDisplayBacklight Backlight;
@@ -46,8 +47,10 @@ WiFiClient net;
 // Alarm Clock
 Wan::AlarmClock alarms(TimezoneOffset);
 HTTP::Request wakeup_request;
+HTTP::Request lightsout_request;
 volatile bool wakeup_requested = false;
 void DoWakeup(const tm& now);
+void DoLightsOut(const tm& now);
 void UpdateClock(const tm& now);
 void rtc_from_ntp(); // updates the onboard RTC from an NTC server. Will only query NTP once per day.
 
@@ -99,14 +102,21 @@ void setup() {
     // Use NTP from the wifi module as the clock time.
     rtc_from_ntp();
 
-    alarms.set_alarm(WakeupTime, DoWakeup);
-    alarms.add_tick_handler(UpdateClock);
+    alarms.set_alarm("wakeup", WakeupTime, DoWakeup);
+    alarms.set_alarm("lights off", LightsOffTime, DoLightsOut);
+    // alarms.add_tick_handler(UpdateClock);
     strcpy(wakeup_request.path, "/lights/wakeup");
     strcpy(wakeup_request.method, "PUT");
+    strcpy(lightsout_request.path, "/lights/?state=off");
+    strcpy(lightsout_request.method, "PUT");
+
 
 
     // Start up the UI
     ui_init();
+    alarms.configure_lvgl_digital_clock(ui_Clock);
+    alarms.configure_lvgl_countdowns(ui_WakeupCountdown);
+
     Backlight.begin();
     backlight_switch_changed = true; // force evaluation of the switch position on the first loop
 }
@@ -142,6 +152,7 @@ void loop() {
             Serial.println(tv_config.current_playlist);
         }
     }
+
     if (change_playlist_requested) {
         change_playlist_requested = false;
         Serial.print("Changing playlist to ");
@@ -183,6 +194,18 @@ void DoWakeup(const tm& now) {
     lights_client.exec(wakeup_request, resp);
     if (resp.code != 204) {
         Serial.print("Error starting wakeup: ");
+        Serial.print(resp.code);
+        Serial.print(" ");
+        Serial.println(resp.status);
+    }
+}
+void DoLightsOut(const tm& now) {
+    Serial.println("Lights Out!");
+    // send HTTP request to turn off the lights
+    HTTP::Response resp;
+    lights_client.exec(lightsout_request, resp);
+    if (resp.code != 204) {
+        Serial.print("Error ending wakeup: ");
         Serial.print(resp.code);
         Serial.print(" ");
         Serial.println(resp.status);
