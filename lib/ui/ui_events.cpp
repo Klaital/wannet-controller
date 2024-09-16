@@ -7,22 +7,34 @@
 
 void ScrollPlaylistUp(lv_event_t * e)
 {
-	// Your code here
+	auto selection = lv_roller_get_selected(ui_PlaylstSelection);
+	lv_roller_set_selected(ui_PlaylstSelection, selection+1, LV_ANIM_ON);
 }
 
 void ScrollPlaylistDown(lv_event_t * e)
 {
-	// Your code here
+	auto selection = lv_roller_get_selected(ui_PlaylstSelection);
+	lv_roller_set_selected(ui_PlaylstSelection, selection-1, LV_ANIM_ON);
 }
 
+extern volatile bool change_playlist_requested;
 void NewPlaylistSelected(lv_event_t * e)
 {
-	// Your code here
+	change_playlist_requested = true;
 }
 
+extern volatile bool change_lights_requested;
 void DimmerUpdated(lv_event_t * e)
 {
-	// Your code here
+	const auto dimmer = lv_slider_get_value(ui_LightsDimmer);
+	lv_label_set_text_fmt(ui_LabelDimmerPct, "%d%%", dimmer);
+	if (dimmer == 0) {
+		lv_obj_clear_state(ui_LightSwitch, LV_STATE_CHECKED);
+	} else {
+		lv_obj_add_state(ui_LightSwitch, LV_STATE_CHECKED);
+	}
+	// Trigger an update to the lights via MQTT
+	change_lights_requested = true;
 }
 
 void SetWakeupTime(lv_event_t * e)
@@ -32,5 +44,11 @@ void SetWakeupTime(lv_event_t * e)
 
 void ToggleLightSwitch(lv_event_t * e)
 {
-	// Your code here
+	if (lv_obj_has_state(ui_LightSwitch, LV_STATE_CHECKED)) {
+		lv_slider_set_value(ui_LightsDimmer, 100, LV_ANIM_ON);
+	} else {
+		lv_slider_set_value(ui_LightsDimmer, 0, LV_ANIM_ON);
+	}
+	// Trigger an update to the lights via MQTT
+	change_lights_requested = true;
 }
