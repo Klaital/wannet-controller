@@ -159,7 +159,7 @@ void loop() {
         char playlist_name[64] = "";
         lv_roller_get_selected_str(ui_PlaylstSelection, playlist_name, 64);
         Serial.println(playlist_name);
-        // tv_controller.ChangePlaylist(playlist_name);
+        tv_controller.ChangePlaylist(playlist_name);
     }
     if (change_lights_requested) {
         change_lights_requested = false;
