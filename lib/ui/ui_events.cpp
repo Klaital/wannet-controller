@@ -3,18 +3,28 @@
 // LVGL version: 8.3.11
 // Project name: UI
 
+// #include <widgets/roller/lv_roller.h>
+
+// #include <core/lv_obj_event.h>
+
 #include "ui.h"
 
 void ScrollPlaylistUp(lv_event_t * e)
 {
-	auto selection = lv_roller_get_selected(ui_PlaylstSelection);
-	lv_roller_set_selected(ui_PlaylstSelection, selection+1, LV_ANIM_ON);
+	char c = LV_KEY_UP;
+	lv_event_send(ui_PlaylstSelection, LV_EVENT_KEY, &c);
+	char buf[40] = "";
+	lv_roller_get_selected_str(ui_PlaylstSelection, buf, 40);
+	lv_label_set_text_fmt(ui_PlaylistIdDisplay, "%u: %s", lv_roller_get_selected(ui_PlaylstSelection), buf);
 }
 
 void ScrollPlaylistDown(lv_event_t * e)
 {
-	auto selection = lv_roller_get_selected(ui_PlaylstSelection);
-	lv_roller_set_selected(ui_PlaylstSelection, selection-1, LV_ANIM_ON);
+	char c = LV_KEY_DOWN;
+	lv_event_send(ui_PlaylstSelection, LV_EVENT_KEY, &c);
+	char buf[40] = "";
+	lv_roller_get_selected_str(ui_PlaylstSelection, buf, 40);
+	lv_label_set_text_fmt(ui_PlaylistIdDisplay, "%u: %s", lv_roller_get_selected(ui_PlaylstSelection), buf);
 }
 
 extern volatile bool change_playlist_requested;
@@ -51,4 +61,14 @@ void ToggleLightSwitch(lv_event_t * e)
 	}
 	// Trigger an update to the lights via MQTT
 	change_lights_requested = true;
+}
+
+void TvSkipForward(lv_event_t * e)
+{
+	// Your code here
+}
+
+void TvPauseAction(lv_event_t * e)
+{
+	// Your code here
 }

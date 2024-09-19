@@ -13,6 +13,8 @@ extern "C" {
 void ScrollPlaylistUp(lv_event_t * e);
 void ScrollPlaylistDown(lv_event_t * e);
 void NewPlaylistSelected(lv_event_t * e);
+void TvSkipForward(lv_event_t * e);
+void TvPauseAction(lv_event_t * e);
 void DimmerUpdated(lv_event_t * e);
 void SetWakeupTime(lv_event_t * e);
 void ToggleLightSwitch(lv_event_t * e);
