@@ -22,3 +22,11 @@ def ToggleLightSwitch(event_struct):
 def SetWakeupTime(event_struct):
     return
 
+
+def TvSkipForward(event_struct):
+    return
+
+
+def TvPauseAction(event_struct):
+    return
+

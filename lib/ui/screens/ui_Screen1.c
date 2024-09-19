@@ -39,55 +39,93 @@ void ui_Screen1_screen_init(void)
     ui_PlaylstSelection = lv_roller_create(ui_TabTV);
     lv_roller_set_options(ui_PlaylstSelection, "Option 1\nOption 2\nOption 3", LV_ROLLER_MODE_NORMAL);
     lv_obj_set_width(ui_PlaylstSelection, 250);
-    lv_obj_set_height(ui_PlaylstSelection, 150);
-    lv_obj_set_x(ui_PlaylstSelection, -6);
-    lv_obj_set_y(ui_PlaylstSelection, 100);
+    lv_obj_set_height(ui_PlaylstSelection, 208);
+    lv_obj_set_x(ui_PlaylstSelection, 0);
+    lv_obj_set_y(ui_PlaylstSelection, 93);
     lv_obj_set_align(ui_PlaylstSelection, LV_ALIGN_CENTER);
 
     ui_ButtonPlaylistUp = lv_btn_create(ui_TabTV);
-    lv_obj_set_width(ui_ButtonPlaylistUp, 85);
-    lv_obj_set_height(ui_ButtonPlaylistUp, 41);
-    lv_obj_set_x(ui_ButtonPlaylistUp, -180);
-    lv_obj_set_y(ui_ButtonPlaylistUp, 50);
+    lv_obj_set_width(ui_ButtonPlaylistUp, 100);
+    lv_obj_set_height(ui_ButtonPlaylistUp, 60);
+    lv_obj_set_x(ui_ButtonPlaylistUp, -190);
+    lv_obj_set_y(ui_ButtonPlaylistUp, 20);
     lv_obj_set_align(ui_ButtonPlaylistUp, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_ButtonPlaylistUp, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     lv_obj_clear_flag(ui_ButtonPlaylistUp, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
-    ui_Label9 = lv_label_create(ui_ButtonPlaylistUp);
-    lv_obj_set_width(ui_Label9, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label9, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_align(ui_Label9, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label9, "Up");
+    ui_PlaylistUpLabel = lv_label_create(ui_ButtonPlaylistUp);
+    lv_obj_set_width(ui_PlaylistUpLabel, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_PlaylistUpLabel, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_PlaylistUpLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_PlaylistUpLabel, "Up");
 
     ui_ButtonPlaylistDown = lv_btn_create(ui_TabTV);
-    lv_obj_set_width(ui_ButtonPlaylistDown, 85);
-    lv_obj_set_height(ui_ButtonPlaylistDown, 41);
-    lv_obj_set_x(ui_ButtonPlaylistDown, -180);
-    lv_obj_set_y(ui_ButtonPlaylistDown, 150);
+    lv_obj_set_width(ui_ButtonPlaylistDown, 100);
+    lv_obj_set_height(ui_ButtonPlaylistDown, 60);
+    lv_obj_set_x(ui_ButtonPlaylistDown, -190);
+    lv_obj_set_y(ui_ButtonPlaylistDown, 175);
     lv_obj_set_align(ui_ButtonPlaylistDown, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_ButtonPlaylistDown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     lv_obj_clear_flag(ui_ButtonPlaylistDown, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
-    ui_Label10 = lv_label_create(ui_ButtonPlaylistDown);
-    lv_obj_set_width(ui_Label10, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label10, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_align(ui_Label10, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label10, "Down");
+    ui_PlaylistDownLabel = lv_label_create(ui_ButtonPlaylistDown);
+    lv_obj_set_width(ui_PlaylistDownLabel, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_PlaylistDownLabel, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_PlaylistDownLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_PlaylistDownLabel, "Down");
 
     ui_ButtonPlaylistSelect = lv_btn_create(ui_TabTV);
-    lv_obj_set_width(ui_ButtonPlaylistSelect, 85);
-    lv_obj_set_height(ui_ButtonPlaylistSelect, 41);
-    lv_obj_set_x(ui_ButtonPlaylistSelect, -180);
-    lv_obj_set_y(ui_ButtonPlaylistSelect, 100);
+    lv_obj_set_width(ui_ButtonPlaylistSelect, 100);
+    lv_obj_set_height(ui_ButtonPlaylistSelect, 60);
+    lv_obj_set_x(ui_ButtonPlaylistSelect, -190);
+    lv_obj_set_y(ui_ButtonPlaylistSelect, 97);
     lv_obj_set_align(ui_ButtonPlaylistSelect, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_ButtonPlaylistSelect, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     lv_obj_clear_flag(ui_ButtonPlaylistSelect, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
-    ui_Label11 = lv_label_create(ui_ButtonPlaylistSelect);
-    lv_obj_set_width(ui_Label11, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label11, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_align(ui_Label11, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label11, "Select");
+    ui_PlaylistSelectLabel = lv_label_create(ui_ButtonPlaylistSelect);
+    lv_obj_set_width(ui_PlaylistSelectLabel, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_PlaylistSelectLabel, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_PlaylistSelectLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_PlaylistSelectLabel, "Select");
+
+    ui_SkipAhead = lv_btn_create(ui_TabTV);
+    lv_obj_set_width(ui_SkipAhead, 100);
+    lv_obj_set_height(ui_SkipAhead, 60);
+    lv_obj_set_x(ui_SkipAhead, 257);
+    lv_obj_set_y(ui_SkipAhead, 29);
+    lv_obj_set_align(ui_SkipAhead, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_SkipAhead, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_clear_flag(ui_SkipAhead, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_SkipAheadLabel = lv_label_create(ui_SkipAhead);
+    lv_obj_set_width(ui_SkipAheadLabel, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_SkipAheadLabel, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_SkipAheadLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_SkipAheadLabel, "Skip");
+
+    ui_PlayPauseButton = lv_btn_create(ui_TabTV);
+    lv_obj_set_width(ui_PlayPauseButton, 100);
+    lv_obj_set_height(ui_PlayPauseButton, 60);
+    lv_obj_set_x(ui_PlayPauseButton, 262);
+    lv_obj_set_y(ui_PlayPauseButton, 130);
+    lv_obj_set_align(ui_PlayPauseButton, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_PlayPauseButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_clear_flag(ui_PlayPauseButton, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_PlayPauseLabel = lv_label_create(ui_PlayPauseButton);
+    lv_obj_set_width(ui_PlayPauseLabel, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_PlayPauseLabel, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_PlayPauseLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_PlayPauseLabel, "Pause");
+
+    ui_PlaylistIdDisplay = lv_label_create(ui_TabTV);
+    lv_obj_set_width(ui_PlaylistIdDisplay, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_PlaylistIdDisplay, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_PlaylistIdDisplay, -23);
+    lv_obj_set_y(ui_PlaylistIdDisplay, -42);
+    lv_obj_set_align(ui_PlaylistIdDisplay, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_PlaylistIdDisplay, "");
 
     ui_TabLights = lv_tabview_add_tab(ui_TabView1, "Lights");
 
@@ -173,6 +211,8 @@ void ui_Screen1_screen_init(void)
     lv_obj_add_event_cb(ui_ButtonPlaylistUp, ui_event_ButtonPlaylistUp, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_ButtonPlaylistDown, ui_event_ButtonPlaylistDown, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_ButtonPlaylistSelect, ui_event_ButtonPlaylistSelect, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_SkipAhead, ui_event_SkipAhead, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_PlayPauseButton, ui_event_PlayPauseButton, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_LightsDimmer, ui_event_LightsDimmer, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_SetWakeup, ui_event_SetWakeup, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_LightSwitch, ui_event_LightSwitch, LV_EVENT_ALL, NULL);

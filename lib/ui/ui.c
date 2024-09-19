@@ -20,13 +20,20 @@ lv_obj_t * ui_TabTV;
 lv_obj_t * ui_PlaylstSelection;
 void ui_event_ButtonPlaylistUp(lv_event_t * e);
 lv_obj_t * ui_ButtonPlaylistUp;
-lv_obj_t * ui_Label9;
+lv_obj_t * ui_PlaylistUpLabel;
 void ui_event_ButtonPlaylistDown(lv_event_t * e);
 lv_obj_t * ui_ButtonPlaylistDown;
-lv_obj_t * ui_Label10;
+lv_obj_t * ui_PlaylistDownLabel;
 void ui_event_ButtonPlaylistSelect(lv_event_t * e);
 lv_obj_t * ui_ButtonPlaylistSelect;
-lv_obj_t * ui_Label11;
+lv_obj_t * ui_PlaylistSelectLabel;
+void ui_event_SkipAhead(lv_event_t * e);
+lv_obj_t * ui_SkipAhead;
+lv_obj_t * ui_SkipAheadLabel;
+void ui_event_PlayPauseButton(lv_event_t * e);
+lv_obj_t * ui_PlayPauseButton;
+lv_obj_t * ui_PlayPauseLabel;
+lv_obj_t * ui_PlaylistIdDisplay;
 lv_obj_t * ui_TabLights;
 void ui_event_LightsDimmer(lv_event_t * e);
 lv_obj_t * ui_LightsDimmer;
@@ -75,6 +82,22 @@ void ui_event_ButtonPlaylistSelect(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_CLICKED) {
         NewPlaylistSelected(e);
+    }
+}
+void ui_event_SkipAhead(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_CLICKED) {
+        TvSkipForward(e);
+    }
+}
+void ui_event_PlayPauseButton(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_CLICKED) {
+        TvPauseAction(e);
     }
 }
 void ui_event_LightsDimmer(lv_event_t * e)
