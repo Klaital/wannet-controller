@@ -10,17 +10,19 @@ extern byte BacklightBrightness;
 void BacklightSwitchISR() {
     backlight_switch_changed = true;
 }
+
+// debounce the switch
+unsigned long last_switched = 0;
 void HandleBacklightSwitch() {
-    backlight_switch_changed = false;
-    const PinStatus backlight_state = digitalRead(BACKLIGHT_SWITCH_ON_PIN);
-#ifdef DEBUG
-    Serial.print("Backlight switched ");
-    Serial.println(backlight_state);
-#endif
-    if (backlight_state == HIGH) {
-        Backlight.begin();
-        Backlight.set(BacklightBrightness); // TODO: make the backlight brightness configurable
-    } else {
-        Backlight.off();
+    const auto now = millis();
+    if (now - last_switched > 10) {
+        backlight_switch_changed = false;
+        const PinStatus backlight_state = digitalRead(BACKLIGHT_SWITCH_ON_PIN);
+        if (backlight_state == HIGH) {
+            Backlight.begin();
+            Backlight.set(BacklightBrightness); // TODO: make the backlight brightness configurable
+        } else {
+            Backlight.off();
+        }
     }
 }
