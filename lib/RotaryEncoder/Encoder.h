@@ -7,7 +7,7 @@
 
 #include <Arduino.h>
 
-typedef void (*RotationHandler)(long pos);
+typedef void (*RotationHandler)(long pos, int direction);
 typedef void (*ButtonHandler)();
 
 class Encoder {
@@ -30,7 +30,8 @@ class Encoder {
 public:
     explicit Encoder(const pin_size_t clk=0, const pin_size_t din=0, const pin_size_t btn=0): clk(clk), din(din), btn(btn) {}
     void begin(pin_size_t clk=0, pin_size_t din=0, pin_size_t btn=0);
-    long read();
+    int read();
+    int last_change = 0; // the direction of the last change. -1 for CCW, +1 for CW, 0 for nothing has happened yet
 
     void register_rotation_callback(RotationHandler h);
     void register_cw_callback(RotationHandler h);

@@ -22,7 +22,7 @@ void Encoder::begin(const pin_size_t clk, const pin_size_t data, const pin_size_
     // attachInterrupt(digitalPinToInterrupt(this->sw), handle_btn, RISING);
 }
 
-long Encoder::read() {
+int Encoder::read() {
     const unsigned long now = millis();
     // Check the button
     if (now - this->btn_last > this->btn_cooldown) {
@@ -41,17 +41,17 @@ long Encoder::read() {
     // early-out if we're spinning too fast.
     // This is an ultra-simple debouncer.
     if (now - this->rotate_last < this->cooldown) {
-        return this->position;
+        return 0;
     }
     const PinStatus currentClk = digitalRead(this->clk);
     if (currentClk == this->clk_last) {
         // encoder hasn't moved, so early-out
-        return this->position;
+        return 0;
     }
     this->clk_last = currentClk;
     if (currentClk == HIGH) {
         // skip rising edges
-        return this->position;
+        return 0;
     }
     const PinStatus data = digitalRead(this->din);
 
@@ -63,6 +63,7 @@ long Encoder::read() {
 
         // Increment the position
         this->position++;
+        this->last_change = 1;
         if (bounds_configured && this->position > this->max) {
             if (wrap) {
                 // wrap around to the beginning of the set
@@ -73,14 +74,15 @@ long Encoder::read() {
             }
         }
         if (this->rotation_handler != nullptr) {
-            this->rotation_handler(this->position);
+            this->rotation_handler(this->position, this->last_change);
         }
         if (this->cw_handler != nullptr) {
-            this->cw_handler(this->position);
+            this->cw_handler(this->position, this->last_change);
         }
     } else {
         // moving counterclockwise
         this->position--;
+        this->last_change = -1;
         if (bounds_configured && this->position < this->min) {
             if (wrap) {
                 // wrap around to the endof the set
@@ -91,13 +93,14 @@ long Encoder::read() {
             }
         }
         if (this->rotation_handler != nullptr) {
-            this->rotation_handler(this->position);
+            this->rotation_handler(this->position, this->last_change);
         }
         if (this->ccw_handler != nullptr) {
-            this->ccw_handler(this->position);
+            this->ccw_handler(this->position, this->last_change);
         }
     }
-    return this->position;
+
+    return this->last_change;
 }
 
 // void RotaryEncoder::poll() {

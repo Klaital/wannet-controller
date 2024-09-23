@@ -47,9 +47,11 @@ void DimmerUpdated(lv_event_t * e)
 	change_lights_requested = true;
 }
 
+extern int WakeupTime;
+extern int NewWakeupTime;
 void SetWakeupTime(lv_event_t * e)
 {
-	// Your code here
+	WakeupTime = NewWakeupTime;
 }
 
 void ToggleLightSwitch(lv_event_t * e)

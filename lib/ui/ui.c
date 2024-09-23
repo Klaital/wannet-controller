@@ -39,14 +39,13 @@ void ui_event_LightsDimmer(lv_event_t * e);
 lv_obj_t * ui_LightsDimmer;
 lv_obj_t * ui_LabelDimmerPct;
 lv_obj_t * ui_LabelWakeupTime;
-lv_obj_t * ui_KeyboardWakeup;
-lv_obj_t * ui_WakeupTimeSpinbox;
 void ui_event_SetWakeup(lv_event_t * e);
 lv_obj_t * ui_SetWakeup;
 lv_obj_t * ui_LabelSubmitWakeup;
 void ui_event_LightSwitch(lv_event_t * e);
 lv_obj_t * ui_LightSwitch;
 lv_obj_t * ui_LabelLights;
+lv_obj_t * ui_NewWakeupTime;
 lv_obj_t * ui____initial_actions0;
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////

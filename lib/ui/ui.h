@@ -45,14 +45,13 @@ void ui_event_LightsDimmer(lv_event_t * e);
 extern lv_obj_t * ui_LightsDimmer;
 extern lv_obj_t * ui_LabelDimmerPct;
 extern lv_obj_t * ui_LabelWakeupTime;
-extern lv_obj_t * ui_KeyboardWakeup;
-extern lv_obj_t * ui_WakeupTimeSpinbox;
 void ui_event_SetWakeup(lv_event_t * e);
 extern lv_obj_t * ui_SetWakeup;
 extern lv_obj_t * ui_LabelSubmitWakeup;
 void ui_event_LightSwitch(lv_event_t * e);
 extern lv_obj_t * ui_LightSwitch;
 extern lv_obj_t * ui_LabelLights;
+extern lv_obj_t * ui_NewWakeupTime;
 extern lv_obj_t * ui____initial_actions0;
 
 

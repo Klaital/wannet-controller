@@ -156,30 +156,11 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_align(ui_LabelWakeupTime, LV_ALIGN_CENTER);
     lv_label_set_text(ui_LabelWakeupTime, "Wakeup Time:");
 
-    ui_KeyboardWakeup = lv_keyboard_create(ui_TabLights);
-    lv_keyboard_set_mode(ui_KeyboardWakeup, LV_KEYBOARD_MODE_NUMBER);
-    lv_obj_set_width(ui_KeyboardWakeup, 300);
-    lv_obj_set_height(ui_KeyboardWakeup, 120);
-    lv_obj_set_x(ui_KeyboardWakeup, -205);
-    lv_obj_set_y(ui_KeyboardWakeup, 134);
-    lv_obj_set_align(ui_KeyboardWakeup, LV_ALIGN_CENTER);
-
-    ui_WakeupTimeSpinbox = lv_spinbox_create(ui_TabLights);
-    lv_obj_set_width(ui_WakeupTimeSpinbox, 63);
-    lv_obj_set_height(ui_WakeupTimeSpinbox, 30);
-    lv_obj_set_x(ui_WakeupTimeSpinbox, -199);
-    lv_obj_set_y(ui_WakeupTimeSpinbox, 57);
-    lv_obj_set_align(ui_WakeupTimeSpinbox, LV_ALIGN_CENTER);
-    lv_spinbox_set_digit_format(ui_WakeupTimeSpinbox, 4, 2);
-    lv_spinbox_set_range(ui_WakeupTimeSpinbox, 0, 9999);
-    lv_spinbox_set_cursor_pos(ui_WakeupTimeSpinbox, 1 - 1);
-    lv_spinbox_set_value(ui_WakeupTimeSpinbox, 530);
-
     ui_SetWakeup = lv_btn_create(ui_TabLights);
     lv_obj_set_width(ui_SetWakeup, 83);
     lv_obj_set_height(ui_SetWakeup, 29);
-    lv_obj_set_x(ui_SetWakeup, -115);
-    lv_obj_set_y(ui_SetWakeup, 57);
+    lv_obj_set_x(ui_SetWakeup, -112);
+    lv_obj_set_y(ui_SetWakeup, 62);
     lv_obj_set_align(ui_SetWakeup, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_SetWakeup, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     lv_obj_clear_flag(ui_SetWakeup, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
@@ -207,6 +188,14 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_y(ui_LabelLights, -153);
     lv_obj_set_align(ui_LabelLights, LV_ALIGN_CENTER);
     lv_label_set_text(ui_LabelLights, "Lights Power");
+
+    ui_NewWakeupTime = lv_label_create(ui_TabLights);
+    lv_obj_set_width(ui_NewWakeupTime, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_NewWakeupTime, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_NewWakeupTime, -310);
+    lv_obj_set_y(ui_NewWakeupTime, 100);
+    lv_obj_set_align(ui_NewWakeupTime, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_NewWakeupTime, "New wakeup time:");
 
     lv_obj_add_event_cb(ui_ButtonPlaylistUp, ui_event_ButtonPlaylistUp, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_ButtonPlaylistDown, ui_event_ButtonPlaylistDown, LV_EVENT_ALL, NULL);
