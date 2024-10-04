@@ -3,10 +3,6 @@
 // LVGL version: 8.3.11
 // Project name: UI
 
-// #include <widgets/roller/lv_roller.h>
-
-// #include <core/lv_obj_event.h>
-
 #include "ui.h"
 
 void ScrollPlaylistUp(lv_event_t * e)
@@ -52,6 +48,11 @@ extern int NewWakeupTime;
 void SetWakeupTime(lv_event_t * e)
 {
 	WakeupTime = NewWakeupTime;
+	// update the ui display as well
+	const auto hour = WakeupTime / 3600;
+	const auto minute = (WakeupTime % 3600) / 60;
+	lv_label_set_text_fmt(ui_LabelWakeupTime, "Wakeup Time: %2d:%2d", hour, minute);
+
 }
 
 void ToggleLightSwitch(lv_event_t * e)
