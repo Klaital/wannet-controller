@@ -24,6 +24,7 @@ Arduino_H7_Video Display(800, 480, GigaDisplayShield);
 int BacklightBrightness = 100;
 int TimezoneOffset = -7;
 int WakeupTime = (6 * 3600) + (30 * 60); // 6:30am
+int NewWakeupTime = WakeupTime;
 int LightsOffTime = (9 * 3600); // 9am
 
 // Backlight switch
@@ -34,10 +35,12 @@ void BacklightSwitchISR();
 
 // Rotary Encoder dial
 Encoder LeftKnob(ROTARY_ENCODER_CLK_PIN, ROTARY_ENCODER_DATA_PIN, ROTARY_ENCODER_BTN_PIN);
-volatile bool leftknob_turned = false;
-volatile bool leftknob_clicked = false;
-void LeftKnobRotationCallback(long new_pos);
-void HandleLeftKnobRotation(long pos);
+volatile int leftknob_turned = 0;
+
+volatile bool leftknob_clicked = true;
+long old_pos = 0;
+void LeftKnobRotationCallback(long new_pos, int direction);
+void HandleLeftKnobRotation(int direction);
 void HandleClickInput();
 
 // WiFi
@@ -66,12 +69,19 @@ TvConfig tv_config;
 volatile bool update_tv_config_requested = true;
 volatile bool change_playlist_requested = false;
 
+// Buzzer
+void chirp();
+
 
 void setup() {
     Serial.begin(9600);
     Display.begin();
     TouchDetector.begin();
     Backlight.off();
+
+    // initilize the buzzer
+    pinMode(BUZZER_PIN, OUTPUT);
+    digitalWrite(BUZZER_PIN, LOW);
 
     // Initialize the backlight switch
     pinMode(BACKLIGHT_SWITCH_ON_PIN, INPUT_PULLDOWN);
@@ -123,19 +133,15 @@ void setup() {
 
 void loop() {
     // Poll devices
-    const long leftknob_pos = LeftKnob.read();
+    const int leftknob_rotation = LeftKnob.read();
 
     // Handle ISR requests
     if (backlight_switch_changed) {
         HandleBacklightSwitch();
     }
-    if (leftknob_clicked) {
-        leftknob_clicked = false;
-        Serial.println("encoder clicked. Nothing is connected to this input yet.");
-    }
-    if (leftknob_turned) {
-        leftknob_turned = false;
-        HandleLeftKnobRotation(leftknob_pos);
+    if (leftknob_turned != 0) {
+        HandleLeftKnobRotation(leftknob_turned);
+        leftknob_turned = 0;
     }
     if (wakeup_requested) {
         wakeup_requested = false;
@@ -177,15 +183,64 @@ void loop() {
     mqttClient.poll();
 }
 
-void LeftKnobRotationCallback(long new_pos) {
-    leftknob_turned = true;
+void LeftKnobRotationCallback(long new_pos, int direction) {
+    leftknob_turned = direction;
 }
-void HandleLeftKnobRotation(const long pos) {
+
+void HandleLeftKnobRotation(const int direction) {
+    chirp();
+    char key_dir = direction > 0 ? LV_KEY_UP : LV_KEY_DOWN;
     // Switch tabs when the left knob is turned.
-    lv_tabview_set_act(ui_TabView1, pos, LV_ANIM_ON);
+    if (leftknob_clicked) { // Tab switching mode
+        auto idx = lv_tabview_get_tab_act(ui_TabView1);
+        if (key_dir == LV_KEY_UP && idx < 2) {
+            idx++;
+        } else if (key_dir == LV_KEY_DOWN && idx > 0) {
+            idx--;
+        }
+
+        lv_tabview_set_act(ui_TabView1, idx, LV_ANIM_ON);
+    } else {
+        switch(lv_tabview_get_tab_act(ui_TabView1)) {
+        case 0:
+            Serial.println("Tab 0: Clock");
+            break;
+        case 1:
+            Serial.println("Changing the channel");
+            lv_event_send(ui_PlaylstSelection, LV_EVENT_KEY, &key_dir);
+            break;
+        case 2:
+            // Add 15 minutes to the current wakeup time
+            NewWakeupTime = NewWakeupTime + (15*60*direction);
+            if (NewWakeupTime <= 0) {
+                Serial.print("Clamping new wakeup time to 00:01. Requested=");
+                Serial.println(NewWakeupTime);
+                NewWakeupTime = 60;
+            } else if (NewWakeupTime > ((23 * 3600) + (45 * 60))) {
+                Serial.print("Clamping new wakeup time to 23:45. Requested=");
+                Serial.println(NewWakeupTime);
+                NewWakeupTime = ((23 * 3600) + (45 * 60));
+            }
+            Serial.print("New wakeup time computed. Old=");
+            Serial.print(WakeupTime);
+            Serial.print(", new=");
+            Serial.println(NewWakeupTime);
+            // Compute the hour:minute from the new time
+            const auto hour = NewWakeupTime / 3600;
+            const auto minute = (NewWakeupTime % 3600) / 60;
+            Serial.print("Updating UI. Time=");
+            Serial.print(hour);
+            Serial.print(":");
+            Serial.println(minute);
+            // Update the UI
+            lv_label_set_text_fmt(ui_NewWakeupTime, "New Wakeup Time: %02d:%02d", hour, minute);
+            break;
+        }
+    }
 }
 void HandleClickInput() {
-    leftknob_clicked = true;
+    // Clicking the stick switches from rotating between tabs vs taking action inside the page - selecting a playlist, altering the wakeup time, etc.
+    leftknob_clicked = !leftknob_clicked;
 }
 void DoWakeup(const tm& now) {
     Serial.println("Good morning!");
@@ -225,4 +280,11 @@ void SetLightsBrightness() {
     mqttClient.beginMessage(BEDROOM_DIMMER_TOPIC);
     mqttClient.print(pwr);
     mqttClient.endMessage();
+}
+
+void chirp() {
+    // analogWrite(BUZZER_PIN, 125);
+    digitalWrite(BUZZER_PIN, HIGH);
+    delay(5);
+    digitalWrite(BUZZER_PIN, LOW);
 }
