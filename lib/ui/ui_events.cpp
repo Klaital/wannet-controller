@@ -9,18 +9,12 @@ void ScrollPlaylistUp(lv_event_t * e)
 {
 	char c = LV_KEY_UP;
 	lv_event_send(ui_PlaylstSelection, LV_EVENT_KEY, &c);
-	char buf[40] = "";
-	lv_roller_get_selected_str(ui_PlaylstSelection, buf, 40);
-	lv_label_set_text_fmt(ui_PlaylistIdDisplay, "%u: %s", lv_roller_get_selected(ui_PlaylstSelection), buf);
 }
 
 void ScrollPlaylistDown(lv_event_t * e)
 {
 	char c = LV_KEY_DOWN;
 	lv_event_send(ui_PlaylstSelection, LV_EVENT_KEY, &c);
-	char buf[40] = "";
-	lv_roller_get_selected_str(ui_PlaylstSelection, buf, 40);
-	lv_label_set_text_fmt(ui_PlaylistIdDisplay, "%u: %s", lv_roller_get_selected(ui_PlaylstSelection), buf);
 }
 
 extern volatile bool change_playlist_requested;

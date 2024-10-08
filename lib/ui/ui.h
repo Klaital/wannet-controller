@@ -39,7 +39,6 @@ extern lv_obj_t * ui_SkipAheadLabel;
 void ui_event_PlayPauseButton(lv_event_t * e);
 extern lv_obj_t * ui_PlayPauseButton;
 extern lv_obj_t * ui_PlayPauseLabel;
-extern lv_obj_t * ui_PlaylistIdDisplay;
 extern lv_obj_t * ui_TabLights;
 void ui_event_LightsDimmer(lv_event_t * e);
 extern lv_obj_t * ui_LightsDimmer;
@@ -52,6 +51,8 @@ void ui_event_LightSwitch(lv_event_t * e);
 extern lv_obj_t * ui_LightSwitch;
 extern lv_obj_t * ui_LabelLights;
 extern lv_obj_t * ui_NewWakeupTime;
+extern lv_obj_t * ui_lblWiFiStatus;
+extern lv_obj_t * ui_lblHttpStatus;
 extern lv_obj_t * ui____initial_actions0;
 
 

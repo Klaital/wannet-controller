@@ -119,14 +119,6 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_align(ui_PlayPauseLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_PlayPauseLabel, "Pause");
 
-    ui_PlaylistIdDisplay = lv_label_create(ui_TabTV);
-    lv_obj_set_width(ui_PlaylistIdDisplay, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_PlaylistIdDisplay, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_PlaylistIdDisplay, -23);
-    lv_obj_set_y(ui_PlaylistIdDisplay, -42);
-    lv_obj_set_align(ui_PlaylistIdDisplay, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_PlaylistIdDisplay, "");
-
     ui_TabLights = lv_tabview_add_tab(ui_TabView1, "Lights");
 
     ui_LightsDimmer = lv_slider_create(ui_TabLights);
@@ -196,6 +188,22 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_y(ui_NewWakeupTime, 100);
     lv_obj_set_align(ui_NewWakeupTime, LV_ALIGN_CENTER);
     lv_label_set_text(ui_NewWakeupTime, "New wakeup time:");
+
+    ui_lblWiFiStatus = lv_label_create(ui_Screen1);
+    lv_obj_set_width(ui_lblWiFiStatus, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_lblWiFiStatus, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_lblWiFiStatus, 377);
+    lv_obj_set_y(ui_lblWiFiStatus, -224);
+    lv_obj_set_align(ui_lblWiFiStatus, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_lblWiFiStatus, "WiFi");
+
+    ui_lblHttpStatus = lv_label_create(ui_Screen1);
+    lv_obj_set_width(ui_lblHttpStatus, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_lblHttpStatus, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_lblHttpStatus, 295);
+    lv_obj_set_y(ui_lblHttpStatus, -222);
+    lv_obj_set_align(ui_lblHttpStatus, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_lblHttpStatus, "Http");
 
     lv_obj_add_event_cb(ui_ButtonPlaylistUp, ui_event_ButtonPlaylistUp, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_ButtonPlaylistDown, ui_event_ButtonPlaylistDown, LV_EVENT_ALL, NULL);

@@ -33,7 +33,6 @@ lv_obj_t * ui_SkipAheadLabel;
 void ui_event_PlayPauseButton(lv_event_t * e);
 lv_obj_t * ui_PlayPauseButton;
 lv_obj_t * ui_PlayPauseLabel;
-lv_obj_t * ui_PlaylistIdDisplay;
 lv_obj_t * ui_TabLights;
 void ui_event_LightsDimmer(lv_event_t * e);
 lv_obj_t * ui_LightsDimmer;
@@ -46,6 +45,8 @@ void ui_event_LightSwitch(lv_event_t * e);
 lv_obj_t * ui_LightSwitch;
 lv_obj_t * ui_LabelLights;
 lv_obj_t * ui_NewWakeupTime;
+lv_obj_t * ui_lblWiFiStatus;
+lv_obj_t * ui_lblHttpStatus;
 lv_obj_t * ui____initial_actions0;
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
