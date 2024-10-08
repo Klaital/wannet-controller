@@ -45,7 +45,11 @@ void HandleClickInput();
 
 // WiFi
 int ConnStatus;
+unsigned long WiFiReconnectTime = 0; // used to space out reconnect attempts
 WiFiClient net;
+unsigned long http_error_time = 0;
+void handle_net_error(HTTP::Response *resp);
+void handle_http_error(HTTP::Response *resp);
 
 // Alarm Clock
 Wan::AlarmClock alarms(TimezoneOffset);
@@ -72,7 +76,6 @@ volatile bool change_playlist_requested = false;
 // Buzzer
 void chirp();
 
-
 void setup() {
     Serial.begin(9600);
     Display.begin();
@@ -96,17 +99,6 @@ void setup() {
       ROTARY_ENCODER_DATA_PIN,
       ROTARY_ENCODER_BTN_PIN);
 
-    // Connect to wifi
-    ConnStatus = WiFi.begin(WIFI_SSID, WIFI_PASS);
-    while(ConnStatus != WL_CONNECTED) {
-        delay(5000);
-        Serial.print("Failed to connect: ");
-        Serial.println(ConnStatus);
-        ConnStatus = WiFi.begin(WIFI_SSID, WIFI_PASS);
-    }
-    Serial.print("IP: ");
-    Serial.println(WiFi.localIP());
-
     // Set up the clock.
     rtc_init();
     // Use NTP from the wifi module as the clock time.
@@ -121,7 +113,6 @@ void setup() {
     strcpy(lightsout_request.method, "PUT");
 
 
-
     // Start up the UI
     ui_init();
     alarms.configure_lvgl_digital_clock(ui_Clock);
@@ -129,9 +120,34 @@ void setup() {
 
     Backlight.begin();
     backlight_switch_changed = true; // force evaluation of the switch position on the first loop
+
+    // Register UI handler callbacks
+    lights_client.net_error_callback = handle_net_error;
+    lights_client.resp_callback = handle_http_error;
+    tv_controller.RegisterHandlers(handle_net_error, handle_http_error);
+    lv_label_set_text_fmt(ui_lblWiFiStatus, "%d", ConnStatus);
 }
 
 void loop() {
+    const auto now_ms = millis();
+    // Connect to wifi if needed
+    if (ConnStatus != WL_CONNECTED && now_ms - WiFiReconnectTime > 5000) {
+        Serial.println("Connecting to wifi...");
+        ConnStatus = WiFi.begin(WIFI_SSID, WIFI_PASS);
+        lv_label_set_text_fmt(ui_lblWiFiStatus, "%d", ConnStatus);
+        if(ConnStatus != WL_CONNECTED) {
+            Serial.print("Failed to connect: ");
+            Serial.println(ConnStatus);
+        }
+        Serial.print("IP: ");
+        Serial.println(WiFi.localIP());
+    }
+    // Clear the HTTP error display after a timeout
+    if (http_error_time > 0 && now_ms - http_error_time > 10000) {
+        http_error_time = 0;
+        lv_label_set_text(ui_lblHttpStatus, "");
+    }
+
     // Poll devices
     const int leftknob_rotation = LeftKnob.read();
 
@@ -288,3 +304,15 @@ void chirp() {
     delay(5);
     digitalWrite(BUZZER_PIN, LOW);
 }
+
+void handle_net_error(HTTP::Response *resp) {
+    ConnStatus = 0; // trigger a wifi reconnect
+    lv_label_set_text_fmt(ui_lblWiFiStatus, "%d", ConnStatus);
+}
+
+void handle_http_error(HTTP::Response *resp) {
+    if (resp == nullptr) return;
+    http_error_time = millis();
+    lv_label_set_text_fmt(ui_lblHttpStatus, "%d %s", resp->code, resp->status);
+}
+
