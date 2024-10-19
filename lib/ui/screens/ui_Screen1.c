@@ -119,6 +119,14 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_align(ui_PlayPauseLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_PlayPauseLabel, "Pause");
 
+    ui_NowPlaying = lv_label_create(ui_TabTV);
+    lv_obj_set_width(ui_NowPlaying, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_NowPlaying, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_NowPlaying, -23);
+    lv_obj_set_y(ui_NowPlaying, -113);
+    lv_obj_set_align(ui_NowPlaying, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_NowPlaying, "");
+
     ui_TabLights = lv_tabview_add_tab(ui_TabView1, "Lights");
 
     ui_LightsDimmer = lv_slider_create(ui_TabLights);

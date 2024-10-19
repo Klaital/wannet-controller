@@ -1,3 +1,5 @@
+#define DEBUG 1
+
 #include <Arduino.h>
 #include <Arduino_GigaDisplayTouch.h>
 #include <Arduino_H7_Video.h>
@@ -53,8 +55,8 @@ void handle_http_error(HTTP::Response *resp);
 
 // Alarm Clock
 Wan::AlarmClock alarms(TimezoneOffset);
-HTTP::Request wakeup_request;
-HTTP::Request lightsout_request;
+// HTTP::Request wakeup_request;
+// HTTP::Request lightsout_request;
 volatile bool wakeup_requested = false;
 void DoWakeup(const tm& now);
 void DoLightsOut(const tm& now);
@@ -62,14 +64,20 @@ void UpdateClock(const tm& now);
 void rtc_from_ntp(); // updates the onboard RTC from an NTC server. Will only query NTP once per day.
 
 // Lights Controller
-HttpClient lights_client(LIGHTS_CONTROLLER_HOST, 80, &net);
+// HttpClient lights_client(LIGHTS_CONTROLLER_HOST, 80, &net);
 MqttClient mqttClient(net);
+void handleMqttMessage(int messageSize);
+volatile int mqtt_status = 0;
 volatile bool change_lights_requested = false;
 void SetLightsBrightness();
 
 // TV Remote Control
-TvControlClient tv_controller(BEDROOM_TV_HOST, 8080, &net);
+// TvControlClient tv_controller(BEDROOM_TV_HOST, 8080, &net);
 TvConfig tv_config;
+void UpdateNowPlaying(const char *title);
+void RequestTvConfigs();
+void HandleTvConfig(const String& raw);
+
 volatile bool update_tv_config_requested = true;
 volatile bool change_playlist_requested = false;
 
@@ -107,10 +115,10 @@ void setup() {
     alarms.set_alarm("wakeup", WakeupTime, DoWakeup);
     alarms.set_alarm("lights off", LightsOffTime, DoLightsOut);
     // alarms.add_tick_handler(UpdateClock);
-    strcpy(wakeup_request.path, "/lights/wakeup");
-    strcpy(wakeup_request.method, "PUT");
-    strcpy(lightsout_request.path, "/lights/?state=off");
-    strcpy(lightsout_request.method, "PUT");
+    // strcpy(wakeup_request.path, "/lights/wakeup");
+    // strcpy(wakeup_request.method, "PUT");
+    // strcpy(lightsout_request.path, "/lights/?state=off");
+    // strcpy(lightsout_request.method, "PUT");
 
 
     // Start up the UI
@@ -122,10 +130,14 @@ void setup() {
     backlight_switch_changed = true; // force evaluation of the switch position on the first loop
 
     // Register UI handler callbacks
-    lights_client.net_error_callback = handle_net_error;
-    lights_client.resp_callback = handle_http_error;
-    tv_controller.RegisterHandlers(handle_net_error, handle_http_error);
+    // lights_client.net_error_callback = handle_net_error;
+    // lights_client.resp_callback = handle_http_error;
+    // tv_controller.RegisterHandlers(handle_net_error, handle_http_error);
     lv_label_set_text_fmt(ui_lblWiFiStatus, "%d", ConnStatus);
+
+    mqttClient.subscribe(BEDROOM_CONFIG_TOPIC);
+    mqttClient.subscribe(BEDROOM_NOWPLAYING_TOPIC);
+    mqttClient.onMessage(handleMqttMessage);
 }
 
 void loop() {
@@ -142,6 +154,23 @@ void loop() {
         Serial.print("IP: ");
         Serial.println(WiFi.localIP());
     }
+    if (ConnStatus == WL_CONNECTED && !mqtt_status) {
+        // Reconnect to mqtt broker
+        mqtt_status = mqttClient.connect(MQTT_BROKER_HOST, MQTT_BROKER_PORT);
+        if (!mqtt_status) {
+            Serial.print("Failed to connect to mqtt broker ");
+            Serial.print(MQTT_BROKER_HOST);
+            Serial.print(":");
+            Serial.print(MQTT_BROKER_PORT);
+            Serial.print(" - ");
+            Serial.println(mqttClient.connectError());
+        } else {
+            Serial.println("Connected to MQTT broker");
+            mqttClient.subscribe(BEDROOM_CONFIG_TOPIC);
+            mqttClient.subscribe(BEDROOM_NOWPLAYING_TOPIC);
+            mqttClient.onMessage(handleMqttMessage);
+        }
+    }
     // Clear the HTTP error display after a timeout
     if (http_error_time > 0 && now_ms - http_error_time > 10000) {
         http_error_time = 0;
@@ -149,7 +178,7 @@ void loop() {
     }
 
     // Poll devices
-    const int leftknob_rotation = LeftKnob.read();
+    LeftKnob.read();
 
     // Handle ISR requests
     if (backlight_switch_changed) {
@@ -168,11 +197,18 @@ void loop() {
     if (update_tv_config_requested) {
         update_tv_config_requested = false;
         Serial.println("Fetching updated TV config...");
-        if (tv_controller.FetchTvConfig(&tv_config)) {
-            lv_roller_set_options(ui_PlaylstSelection, tv_config.playlist_options, LV_ANIM_ON);
-            Serial.print("Selected playlist: ");
-            Serial.println(tv_config.current_playlist);
-        }
+        mqttClient.beginMessage(BEDROOM_UPDATE_TOPIC);
+        mqttClient.print("cfg");
+        mqttClient.endMessage();
+        // TODO: figure out how to not spam, but retry on failure
+        // if (tv_controller.FetchTvConfig(&tv_config)) {
+        //     lv_roller_set_options(ui_PlaylstSelection, tv_config.playlist_options, LV_ANIM_ON);
+        //     Serial.print("Selected playlist: ");
+        //     Serial.println(tv_config.current_playlist);
+        // } else {
+        //     // retry on failure
+        //     update_tv_config_requested = true;
+        // }
     }
 
     if (change_playlist_requested) {
@@ -181,7 +217,10 @@ void loop() {
         char playlist_name[64] = "";
         lv_roller_get_selected_str(ui_PlaylstSelection, playlist_name, 64);
         Serial.println(playlist_name);
-        tv_controller.ChangePlaylist(playlist_name);
+        mqttClient.beginMessage(BEDROOM_PLAYLIST_TOPIC);
+        mqttClient.print(playlist_name); // the contents are discarded anyway
+        mqttClient.endMessage();
+        // tv_controller.ChangePlaylist(playlist_name);
     }
     if (change_lights_requested) {
         change_lights_requested = false;
@@ -197,6 +236,10 @@ void loop() {
     // call poll() regularly to allow the library to send MQTT keep alive which
     // avoids being disconnected by the broker
     mqttClient.poll();
+    if (!mqttClient.connected()) {
+        Serial.println("MQTT connection lost");
+        mqtt_status = 0;
+    }
 }
 
 void LeftKnobRotationCallback(long new_pos, int direction) {
@@ -260,27 +303,35 @@ void HandleClickInput() {
 }
 void DoWakeup(const tm& now) {
     Serial.println("Good morning!");
+    mqttClient.beginMessage(BEDROOM_WAKEUP_TOPIC);
+    mqttClient.write(1);
+    mqttClient.endMessage();
+
     // send HTTP request to turn on the lights
-    HTTP::Response resp;
-    lights_client.exec(wakeup_request, resp);
-    if (resp.code != 204) {
-        Serial.print("Error starting wakeup: ");
-        Serial.print(resp.code);
-        Serial.print(" ");
-        Serial.println(resp.status);
-    }
+    // HTTP::Response resp;
+    // lights_client.exec(wakeup_request, resp);
+    // if (resp.code != 204) {
+    //     Serial.print("Error starting wakeup: ");
+    //     Serial.print(resp.code);
+    //     Serial.print(" ");
+    //     Serial.println(resp.status);
+    // }
 }
 void DoLightsOut(const tm& now) {
     Serial.println("Lights Out!");
-    // send HTTP request to turn off the lights
-    HTTP::Response resp;
-    lights_client.exec(lightsout_request, resp);
-    if (resp.code != 204) {
-        Serial.print("Error ending wakeup: ");
-        Serial.print(resp.code);
-        Serial.print(" ");
-        Serial.println(resp.status);
-    }
+    mqttClient.beginMessage(BEDROOM_DIMMER_TOPIC);
+    mqttClient.write(0);
+    mqttClient.endMessage();
+
+    // // send HTTP request to turn off the lights
+    // HTTP::Response resp;
+    // lights_client.exec(lightsout_request, resp);
+    // if (resp.code != 204) {
+    //     Serial.print("Error ending wakeup: ");
+    //     Serial.print(resp.code);
+    //     Serial.print(" ");
+    //     Serial.println(resp.status);
+    // }
 }
 
 void UpdateClock(const tm& now) {
@@ -295,7 +346,17 @@ void SetLightsBrightness() {
     // send brightness update via mqtt
     mqttClient.beginMessage(BEDROOM_DIMMER_TOPIC);
     mqttClient.print(pwr);
-    mqttClient.endMessage();
+    const auto err = mqttClient.endMessage();
+    if (err != 1) {
+        Serial.print("Failed to send mqtt message on ");
+        Serial.print(BEDROOM_DIMMER_TOPIC);
+        Serial.print(": ");
+        Serial.println(err);
+        mqtt_status = 0;
+    } else {
+        Serial.print("MQTT message sent on ");
+        Serial.println(BEDROOM_DIMMER_TOPIC);
+    }
 }
 
 void chirp() {
@@ -316,3 +377,22 @@ void handle_http_error(HTTP::Response *resp) {
     lv_label_set_text_fmt(ui_lblHttpStatus, "%d %s", resp->code, resp->status);
 }
 
+void handleNowPlayingMessage(const String& msg) {
+    UpdateNowPlaying(msg.c_str());
+}
+void handleMqttMessage(int messageSize) {
+    const String topic = mqttClient.messageTopic();
+    const String msg = mqttClient.readString();
+    // Serial.print(topic);
+    // Serial.print(": \"");
+    // Serial.print(msg);
+    // Serial.println("\"");
+    lv_label_set_text(ui_lblHttpStatus, topic.c_str());
+    if (topic.equals(BEDROOM_NOWPLAYING_TOPIC)) {
+        handleNowPlayingMessage(msg);
+    } else if (topic.equals(BEDROOM_CONFIG_TOPIC)) {
+        lv_label_set_text(ui_lblHttpStatus, BEDROOM_CONFIG_TOPIC);
+        HandleTvConfig(msg);
+    }
+    // add handlers for any new topics here
+}

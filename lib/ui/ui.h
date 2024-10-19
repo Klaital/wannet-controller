@@ -39,6 +39,7 @@ extern lv_obj_t * ui_SkipAheadLabel;
 void ui_event_PlayPauseButton(lv_event_t * e);
 extern lv_obj_t * ui_PlayPauseButton;
 extern lv_obj_t * ui_PlayPauseLabel;
+extern lv_obj_t * ui_NowPlaying;
 extern lv_obj_t * ui_TabLights;
 void ui_event_LightsDimmer(lv_event_t * e);
 extern lv_obj_t * ui_LightsDimmer;

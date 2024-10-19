@@ -34,8 +34,9 @@ void AlarmClock::set_alarm(const char* name, const unsigned long day_seconds, co
     Serial.print("Adding alarm #");
     Serial.print(this->alarm_count);
     Serial.print(": ");
-    Serial.println(name);
-
+    Serial.print(name);
+    Serial.print(" @ ");
+    Serial.println(day_seconds);
 }
 
 void AlarmClock::add_tick_handler(const AlarmHandler h) {
