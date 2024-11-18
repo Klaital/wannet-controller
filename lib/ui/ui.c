@@ -34,6 +34,9 @@ void ui_event_PlayPauseButton(lv_event_t * e);
 lv_obj_t * ui_PlayPauseButton;
 lv_obj_t * ui_PlayPauseLabel;
 lv_obj_t * ui_NowPlaying;
+void ui_event_btnRefreshPlaylists(lv_event_t * e);
+lv_obj_t * ui_btnRefreshPlaylists;
+lv_obj_t * ui_Label1;
 lv_obj_t * ui_TabLights;
 void ui_event_LightsDimmer(lv_event_t * e);
 lv_obj_t * ui_LightsDimmer;
@@ -99,6 +102,14 @@ void ui_event_PlayPauseButton(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_CLICKED) {
         TvPauseAction(e);
+    }
+}
+void ui_event_btnRefreshPlaylists(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_CLICKED) {
+        RequestPlaylistRefresh(e);
     }
 }
 void ui_event_LightsDimmer(lv_event_t * e)

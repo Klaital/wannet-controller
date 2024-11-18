@@ -127,6 +127,21 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_align(ui_NowPlaying, LV_ALIGN_CENTER);
     lv_label_set_text(ui_NowPlaying, "");
 
+    ui_btnRefreshPlaylists = lv_btn_create(ui_TabTV);
+    lv_obj_set_width(ui_btnRefreshPlaylists, 100);
+    lv_obj_set_height(ui_btnRefreshPlaylists, 50);
+    lv_obj_set_x(ui_btnRefreshPlaylists, -306);
+    lv_obj_set_y(ui_btnRefreshPlaylists, 93);
+    lv_obj_set_align(ui_btnRefreshPlaylists, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_btnRefreshPlaylists, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_clear_flag(ui_btnRefreshPlaylists, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_Label1 = lv_label_create(ui_btnRefreshPlaylists);
+    lv_obj_set_width(ui_Label1, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label1, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Label1, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label1, "Refresh");
+
     ui_TabLights = lv_tabview_add_tab(ui_TabView1, "Lights");
 
     ui_LightsDimmer = lv_slider_create(ui_TabLights);
@@ -218,6 +233,7 @@ void ui_Screen1_screen_init(void)
     lv_obj_add_event_cb(ui_ButtonPlaylistSelect, ui_event_ButtonPlaylistSelect, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_SkipAhead, ui_event_SkipAhead, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_PlayPauseButton, ui_event_PlayPauseButton, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_btnRefreshPlaylists, ui_event_btnRefreshPlaylists, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_LightsDimmer, ui_event_LightsDimmer, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_SetWakeup, ui_event_SetWakeup, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_LightSwitch, ui_event_LightSwitch, LV_EVENT_ALL, NULL);

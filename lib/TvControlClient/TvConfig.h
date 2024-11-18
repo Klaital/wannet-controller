@@ -22,6 +22,8 @@ public:
         parse(doc);
     }
     void parse(char* doc) {
+        Serial.println("Parsing config: ");
+        Serial.println(doc);
         KeyValSet kv;
         kv.parse(doc);
         this->shuffle = kv.get_bool("shuffle");

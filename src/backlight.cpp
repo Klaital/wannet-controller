@@ -13,11 +13,12 @@ void BacklightSwitchISR() {
 
 // debounce the switch
 unsigned long last_switched = 0;
+extern PinStatus backlight_state;
 void HandleBacklightSwitch() {
     const auto now = millis();
-    if (now - last_switched > 10) {
-        backlight_switch_changed = false;
-        const PinStatus backlight_state = digitalRead(BACKLIGHT_SWITCH_ON_PIN);
+    const PinStatus new_backlight_state = digitalRead(BACKLIGHT_SWITCH_ON_PIN);
+    if (now - last_switched > 10 && new_backlight_state != backlight_state) {
+        backlight_state = new_backlight_state;
         if (backlight_state == HIGH) {
             Backlight.begin();
             Backlight.set(BacklightBrightness); // TODO: make the backlight brightness configurable

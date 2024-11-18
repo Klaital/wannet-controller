@@ -1,4 +1,4 @@
-#define DEBUG 1
+// #define DEBUG 1
 
 #include <Arduino.h>
 #include <Arduino_GigaDisplayTouch.h>
@@ -14,10 +14,8 @@
 #include <HttpClient.h>
 #include <mbed_mktime.h>
 #include <MqttClient.h>
-#include <Request.h>
 #include <Response.h>
 #include <TvConfig.h>
-#include <TvControlClient.h>
 
 Arduino_GigaDisplayTouch  TouchDetector;
 Arduino_H7_Video Display(800, 480, GigaDisplayShield);
@@ -33,7 +31,7 @@ int LightsOffTime = (9 * 3600); // 9am
 GigaDisplayBacklight Backlight;
 volatile bool backlight_switch_changed = true;
 void HandleBacklightSwitch();
-void BacklightSwitchISR();
+// void BacklightSwitchISR();
 
 // Rotary Encoder dial
 Encoder LeftKnob(ROTARY_ENCODER_CLK_PIN, ROTARY_ENCODER_DATA_PIN, ROTARY_ENCODER_BTN_PIN);
@@ -55,8 +53,6 @@ void handle_http_error(HTTP::Response *resp);
 
 // Alarm Clock
 Wan::AlarmClock alarms(TimezoneOffset);
-// HTTP::Request wakeup_request;
-// HTTP::Request lightsout_request;
 volatile bool wakeup_requested = false;
 void DoWakeup(const tm& now);
 void DoLightsOut(const tm& now);
@@ -77,7 +73,7 @@ TvConfig tv_config;
 void UpdateNowPlaying(const char *title);
 void RequestTvConfigs();
 void HandleTvConfig(const String& raw);
-
+PinStatus backlight_state = LOW;
 volatile bool update_tv_config_requested = true;
 volatile bool change_playlist_requested = false;
 
@@ -86,19 +82,26 @@ void chirp();
 
 void setup() {
     Serial.begin(9600);
+#ifdef DEBUG
+    while(!Serial);
+#endif
     Display.begin();
     TouchDetector.begin();
     Backlight.off();
 
     // initilize the buzzer
+    Serial.println("Initializing buzzer pin");
     pinMode(BUZZER_PIN, OUTPUT);
     digitalWrite(BUZZER_PIN, LOW);
 
     // Initialize the backlight switch
+    Serial.println("Initializing backlight pin");
     pinMode(BACKLIGHT_SWITCH_ON_PIN, INPUT_PULLDOWN);
-    attachInterrupt(digitalPinToInterrupt(BACKLIGHT_SWITCH_ON_PIN), BacklightSwitchISR, CHANGE);
+    Serial.println("Attaching backlight switch interrupt");
+    // attachInterrupt(digitalPinToInterrupt(BACKLIGHT_SWITCH_ON_PIN), BacklightSwitchISR, CHANGE);
 
     // Initialize the rotary encoder
+    Serial.println("Initializing rotary encoder");
     LeftKnob.register_btn_callback(HandleClickInput);
     LeftKnob.register_rotation_callback(LeftKnobRotationCallback);
     LeftKnob.configure_bounds(0, 2);
@@ -108,10 +111,12 @@ void setup() {
       ROTARY_ENCODER_BTN_PIN);
 
     // Set up the clock.
+    Serial.println("Initializing RTC");
     rtc_init();
     // Use NTP from the wifi module as the clock time.
     rtc_from_ntp();
 
+    Serial.println("Configuring alarms");
     alarms.set_alarm("wakeup", WakeupTime, DoWakeup);
     alarms.set_alarm("lights off", LightsOffTime, DoLightsOut);
     // alarms.add_tick_handler(UpdateClock);
@@ -122,7 +127,9 @@ void setup() {
 
 
     // Start up the UI
+    Serial.println("Launching UI");
     ui_init();
+    Serial.println("Attaching alarm clock to the UI");
     alarms.configure_lvgl_digital_clock(ui_Clock);
     alarms.configure_lvgl_countdowns(ui_WakeupCountdown);
 
@@ -179,11 +186,9 @@ void loop() {
 
     // Poll devices
     LeftKnob.read();
+    HandleBacklightSwitch();
 
     // Handle ISR requests
-    if (backlight_switch_changed) {
-        HandleBacklightSwitch();
-    }
     if (leftknob_turned != 0) {
         HandleLeftKnobRotation(leftknob_turned);
         leftknob_turned = 0;

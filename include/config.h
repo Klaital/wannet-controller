@@ -7,12 +7,12 @@
 
 #include <Arduino.h>
 
-constexpr pin_size_t BACKLIGHT_SWITCH_ON_PIN = A2;
-constexpr pin_size_t ROTARY_ENCODER_CLK_PIN = 8;
-constexpr pin_size_t ROTARY_ENCODER_DATA_PIN = 9;
-constexpr pin_size_t ROTARY_ENCODER_BTN_PIN = A0;
+constexpr pin_size_t BACKLIGHT_SWITCH_ON_PIN = A5;
+constexpr pin_size_t ROTARY_ENCODER_CLK_PIN = A1;
+constexpr pin_size_t ROTARY_ENCODER_DATA_PIN = A2;
+constexpr pin_size_t ROTARY_ENCODER_BTN_PIN = A4;
 
-constexpr pin_size_t BUZZER_PIN = A1;
+constexpr pin_size_t BUZZER_PIN = A0;
 
 constexpr char BEDROOM_TV_HOST[] = "192.168.88.178";
 constexpr int BEDROOM_TV_PORT = 8080;

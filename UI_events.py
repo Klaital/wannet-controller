@@ -30,3 +30,7 @@ def TvSkipForward(event_struct):
 def TvPauseAction(event_struct):
     return
 
+
+def RequestPlaylistRefresh(event_struct):
+    return
+

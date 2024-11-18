@@ -69,3 +69,9 @@ void TvPauseAction(lv_event_t * e)
 {
 	// Your code here
 }
+
+extern bool update_tv_config_requested;
+void RequestPlaylistRefresh(lv_event_t * e)
+{
+	update_tv_config_requested = true;
+}
